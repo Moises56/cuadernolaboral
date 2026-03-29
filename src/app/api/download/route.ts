@@ -59,28 +59,16 @@ export async function GET(request: NextRequest) {
   const publicId     = extractPublicId(url)
   const resourceType = getResourceType(url)
 
-  // For raw files (PDFs): use private_download_url which routes through
-  // api.cloudinary.com with API credentials — bypasses CDN delivery
-  // restrictions ("Blocked for delivery", "untrusted customer", etc.)
-  let fetchUrl: string
-  if (resourceType === 'raw' && publicId) {
-    // private_download_url signs the request with api_key + api_secret.
-    // Pass empty format string because public_id already includes the extension.
-    fetchUrl = cloudinary.utils.private_download_url(publicId, '', {
-      resource_type: 'raw',
-      type:          'upload',
-    })
-  } else {
-    // For images use signed CDN URL
-    fetchUrl = publicId
-      ? cloudinary.url(publicId, {
-          resource_type: resourceType,
-          type:          'upload',
-          sign_url:      true,
-          secure:        true,
-        })
-      : url
-  }
+  // Generate a signed CDN URL — works now that "PDF and ZIP delivery" is
+  // enabled in the Cloudinary account security settings.
+  const fetchUrl = publicId
+    ? cloudinary.url(publicId, {
+        resource_type: resourceType,
+        type:          'upload',
+        sign_url:      true,
+        secure:        true,
+      })
+    : url
 
   let upstream: Response
   try {
