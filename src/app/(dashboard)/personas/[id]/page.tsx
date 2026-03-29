@@ -353,7 +353,7 @@ export default async function PersonaDetailPage({
               </div>
               <div className="flex flex-wrap gap-2">
                 <a
-                  href={person.cvUrl}
+                  href={`/api/download?url=${encodeURIComponent(person.cvUrl)}&name=${encodeURIComponent(person.fullName)}&inline=1`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
