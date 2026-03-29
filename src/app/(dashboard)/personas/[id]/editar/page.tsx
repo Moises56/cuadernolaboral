@@ -67,7 +67,7 @@ export default async function EditarPersonaPage({
     phone:          person.phone,
     email:          person.email ?? '',
     age:            person.age ?? undefined,
-    profession:     person.profession ?? '',
+    profession:     person.profession,
     workedForState: person.workedForState,
     hasDemand:      person.hasDemand,
     observations:   person.observations ?? '',

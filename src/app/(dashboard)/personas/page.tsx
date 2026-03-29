@@ -14,10 +14,10 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 20
 
-type SortField = 'fullName' | 'dni' | 'createdAt' | 'profession'
+type SortField = 'fullName' | 'dni' | 'createdAt'
 type SortDir   = 'asc' | 'desc'
 
-const VALID_SORT: SortField[] = ['fullName', 'dni', 'createdAt', 'profession']
+const VALID_SORT: SortField[] = ['fullName', 'dni', 'createdAt']
 
 export default async function PersonasPage({
   searchParams,
@@ -41,9 +41,8 @@ export default async function PersonasPage({
   const where = {
     ...(q && {
       OR: [
-        { fullName:   { contains: q, mode: 'insensitive' as const } },
-        { dni:        { contains: q } },
-        { profession: { contains: q, mode: 'insensitive' as const } },
+        { fullName: { contains: q, mode: 'insensitive' as const } },
+        { dni:      { contains: q } },
       ],
     }),
     ...(demanda === 'con' && { hasDemand: true }),

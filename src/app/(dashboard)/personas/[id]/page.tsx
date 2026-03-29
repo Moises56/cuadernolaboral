@@ -199,7 +199,23 @@ export default async function PersonaDetailPage({
               <InfoRow label="Teléfono"        value={person.phone}    mono />
               {person.email     && <InfoRow label="Correo"      value={person.email} />}
               {person.age       && <InfoRow label="Edad"        value={`${person.age} años`} />}
-              {person.profession && <InfoRow label="Profesión"  value={person.profession} className="col-span-2" />}
+              {person.profession.length > 0 && (
+                <div className="col-span-2 sm:col-span-3 flex flex-col gap-1">
+                  <span className="text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
+                    Profesión / Oficio
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {person.profession.map(p => (
+                      <span
+                        key={p}
+                        className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+                      >
+                        {p}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </SectionCard>
 

@@ -168,7 +168,7 @@ interface PersonaData {
   fullName:     string
   dni:          string
   phone:        string
-  profession:   string | null
+  profession:   string[]
   hasDemand:    boolean
   workPlace:    string | null
   contractType: string | null
@@ -184,7 +184,7 @@ function getCellValue(persona: PersonaData, key: ColKey): string {
     case 'phone':
       return persona.phone
     case 'profession':
-      return persona.profession ?? '—'
+      return persona.profession.join(', ') || '—'
     case 'hasDemand':
       return persona.hasDemand ? 'Sí' : 'No'
     case 'workPlace':
@@ -321,7 +321,6 @@ export async function GET(req: NextRequest) {
         OR: [
           { fullName:   { contains: q, mode: 'insensitive' as const } },
           { dni:        { contains: q } },
-          { profession: { contains: q, mode: 'insensitive' as const } },
         ],
       }),
       ...(demanda === 'con' && { hasDemand: true }),

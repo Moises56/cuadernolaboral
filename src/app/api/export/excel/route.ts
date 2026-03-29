@@ -24,8 +24,7 @@ export async function GET(req: NextRequest) {
         OR: [
           { fullName:   { contains: q, mode: 'insensitive' as const } },
           { dni:        { contains: q } },
-          { profession: { contains: q, mode: 'insensitive' as const } },
-        ],
+          ],
       }),
       ...(demanda === 'con' && { hasDemand: true }),
       ...(demanda === 'sin' && { hasDemand: false }),
@@ -129,7 +128,7 @@ export async function GET(req: NextRequest) {
         phone:        p.phone,
         email:        p.email        ?? '',
         age:          p.age          ?? '',
-        profession:   p.profession   ?? '',
+        profession:   p.profession.join(', '),
         hasDemand:    p.hasDemand ? 'Sí' : 'No',
         workPlace:    p.workPlace    ?? '',
         contractType: p.contractType === 'ACUERDO'

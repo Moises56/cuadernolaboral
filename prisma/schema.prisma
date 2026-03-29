@@ -66,7 +66,7 @@ model Person {
   phone          String
   email          String?
   age            Int?
-  profession     String?
+  profession     String[]
   workedForState Boolean       @default(false)
   hasDemand      Boolean       @default(false)
   observations   String?

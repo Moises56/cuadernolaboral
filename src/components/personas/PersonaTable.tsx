@@ -29,7 +29,7 @@ export interface PersonaRow {
   id:           string
   fullName:     string
   dni:          string
-  profession:   string | null
+  profession:   string[]
   hasDemand:    boolean
   workPlace:    string | null
   contractType: 'ACUERDO' | 'CONTRATO' | null
@@ -37,7 +37,7 @@ export interface PersonaRow {
   relatedPerson: { fullName: string; relationship: string } | null
 }
 
-type SortField = 'fullName' | 'dni' | 'createdAt' | 'profession'
+type SortField = 'fullName' | 'dni' | 'createdAt'
 type SortDir   = 'asc' | 'desc'
 
 // ─── Avatar ─────────────────────────────────────────────────────────────────
@@ -232,13 +232,9 @@ export function PersonaTable({
                   orderDir={orderDir}
                   buildSortHref={buildSortHref}
                 />
-                <SortableHeader
-                  field="profession"
-                  label="Profesión"
-                  orderBy={orderBy}
-                  orderDir={orderDir}
-                  buildSortHref={buildSortHref}
-                />
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground whitespace-nowrap">
+                  Profesión / Oficio
+                </th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
                   Demanda
                 </th>
@@ -276,9 +272,10 @@ export function PersonaTable({
 
                   {/* Profesión */}
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-sm">
-                    {persona.profession ?? (
-                      <span className="text-muted-foreground/30">—</span>
-                    )}
+                    {persona.profession.length > 0
+                      ? persona.profession.join(', ')
+                      : <span className="text-muted-foreground/30">—</span>
+                    }
                   </td>
 
                   {/* Demanda */}

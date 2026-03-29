@@ -7,10 +7,14 @@ export const ContractTypeLabels = {
   CONTRATO: 'Contrato',
 } as const satisfies Record<string, string>
 
+// ─── DNI hondureño: XXXX-YYYY-NNNNNN (14 dígitos sin guiones) ──────────────
+const DNI_REGEX = /^\d{14}$/
+const DNI_ERROR = 'El DNI debe tener 14 dígitos (formato: 0801-1995-033990)'
+
 // ─── Schema del familiar designado ────────────────────────────────────────
 export const relatedPersonSchema = z.object({
   fullName:     z.string().min(2, 'Ingrese el nombre completo'),
-  dni:          z.string().regex(/^\d{13}$/, 'El DNI debe tener exactamente 13 dígitos'),
+  dni:          z.string().regex(DNI_REGEX, DNI_ERROR),
   phone:        z.string().min(8, 'Ingrese un teléfono válido'),
   email:        z.union([z.string().email('Email inválido'), z.literal('')]).optional(),
   relationship: z.string().min(2, 'Indique el parentesco'),
@@ -19,10 +23,6 @@ export const relatedPersonSchema = z.object({
 export type RelatedPersonValues = z.infer<typeof relatedPersonSchema>
 
 // ─── Schema dinámico según configuración ──────────────────────────────────
-// Recibe los FormFieldConfig (core + custom, activos) y genera el schema.
-// Si un campo core tiene required:true → valida el formato.
-// Si tiene required:false → acepta string vacío o undefined.
-
 export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
   const cfgMap = new Map(fieldConfigs.map(c => [c.fieldKey, c]))
   const req = (key: string) => cfgMap.get(key)?.required ?? false
@@ -33,7 +33,7 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
       ? z.string().min(2, 'Ingrese el nombre completo')
       : z.string(),
     dni: req('dni')
-      ? z.string().regex(/^\d{13}$/, 'El DNI debe tener exactamente 13 dígitos')
+      ? z.string().regex(DNI_REGEX, DNI_ERROR)
       : z.string(),
     phone: req('phone')
       ? z.string().min(8, 'Ingrese un teléfono válido')
@@ -41,10 +41,10 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
     email: z.union([z.string().email('Email inválido'), z.literal('')]).optional(),
     age: req('age')
       ? z.number().int().min(16, 'Edad mínima 16').max(99, 'Edad máxima 99')
-      : z.number().int().min(16).max(99).optional(),
+      : z.number().int().min(0).max(120).optional(),
     profession: req('profession')
-      ? z.string().min(1, 'Ingrese la profesión')
-      : z.string().optional(),
+      ? z.array(z.string().min(1)).min(1, 'Ingrese al menos una profesión u oficio')
+      : z.array(z.string()).optional(),
     workedForState: z.boolean().default(false),
     hasDemand:      z.boolean().default(false),
     observations:   req('observations')
@@ -91,8 +91,8 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
       const rp = data.relatedPerson
       if (!rp?.fullName || rp.fullName.length < 2)
         ctx.addIssue({ code: 'custom', path: ['relatedPerson', 'fullName'], message: 'Ingrese el nombre completo' })
-      if (!rp?.dni || !/^\d{13}$/.test(rp.dni))
-        ctx.addIssue({ code: 'custom', path: ['relatedPerson', 'dni'], message: 'El DNI debe tener 13 dígitos' })
+      if (!rp?.dni || !DNI_REGEX.test(rp.dni))
+        ctx.addIssue({ code: 'custom', path: ['relatedPerson', 'dni'], message: DNI_ERROR })
       if (!rp?.phone || rp.phone.length < 8)
         ctx.addIssue({ code: 'custom', path: ['relatedPerson', 'phone'], message: 'Ingrese un teléfono válido' })
       if (!rp?.relationship || rp.relationship.length < 2)
@@ -100,14 +100,14 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
     })
 }
 
-// Tipo base para TypeScript — compatible con ambas variantes del schema
+// Tipo base — compatible con ambas variantes del schema
 export const personaBaseSchema = z.object({
   fullName:       z.string(),
   dni:            z.string(),
   phone:          z.string(),
   email:          z.union([z.string().email(), z.literal('')]).optional(),
-  age:            z.number().int().min(16).max(99).optional(),
-  profession:     z.string().optional(),
+  age:            z.number().int().min(0).max(120).optional(),
+  profession:     z.array(z.string()).optional(),
   workedForState: z.boolean(),
   hasDemand:      z.boolean(),
   observations:   z.string().optional(),
@@ -133,8 +133,8 @@ export const personaFormSchema = personaBaseSchema
     const rp = data.relatedPerson
     if (!rp?.fullName || rp.fullName.length < 2)
       ctx.addIssue({ code: 'custom', path: ['relatedPerson', 'fullName'], message: 'Ingrese el nombre completo' })
-    if (!rp?.dni || !/^\d{13}$/.test(rp.dni))
-      ctx.addIssue({ code: 'custom', path: ['relatedPerson', 'dni'], message: 'El DNI debe tener 13 dígitos' })
+    if (!rp?.dni || !DNI_REGEX.test(rp.dni))
+      ctx.addIssue({ code: 'custom', path: ['relatedPerson', 'dni'], message: DNI_ERROR })
     if (!rp?.phone || rp.phone.length < 8)
       ctx.addIssue({ code: 'custom', path: ['relatedPerson', 'phone'], message: 'Ingrese un teléfono válido' })
     if (!rp?.relationship || rp.relationship.length < 2)

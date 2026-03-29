@@ -1,14 +1,14 @@
 'use client'
 /* eslint-disable react-hooks/refs, react-hooks/incompatible-library -- react-hook-form field objects contain a ref property and watch() is not memoizable by React Compiler; components work correctly */
 
-import React, { useMemo, useRef } from 'react'
+import React, { useMemo, useRef, useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useForm, type FieldPath, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import {
-  User, Briefcase, Users, FileUp, AlertTriangle, Loader2,
+  User, Briefcase, Users, FileUp, AlertTriangle, Loader2, X, Plus,
 } from 'lucide-react'
 
 import { useGSAP, gsap, ANIM } from '@/lib/gsap.config'
@@ -35,6 +35,18 @@ const FileUploader = dynamic(
   () => import('@/components/personas/FileUploader').then(m => m.FileUploader),
   { ssr: false, loading: () => <div className="min-h-[120px] rounded-lg border-2 border-dashed border-border bg-muted/30 animate-pulse" /> }
 )
+
+// ─── Helper: año de nacimiento desde DNI hondureño ────────────────────────────
+// Formato: 0801-1995-033990 → sin guiones → posiciones 4-7 = año
+function parseBirthYearFromDNI(dni: string): number | null {
+  const stripped = dni.replace(/\D/g, '')
+  if (stripped.length >= 8) {
+    const year = parseInt(stripped.substring(4, 8), 10)
+    const current = new Date().getFullYear()
+    if (year >= 1920 && year <= current - 10) return year
+  }
+  return null
+}
 
 // ─── Secciones de campos base ─────────────────────────────────────────────────
 // Define a qué sección pertenece cada campo base del modelo Person.
@@ -104,7 +116,7 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
       dni:            '',
       phone:          '',
       email:          '',
-      profession:     '',
+      profession:     [],
       workedForState: false,
       hasDemand:      false,
       observations:   '',
@@ -121,8 +133,19 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
   })
 
   const hasDemand    = form.watch('hasDemand')
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const dniValue     = form.watch('dni')
   const isSubmitting = form.formState.isSubmitting
   const relatedRef   = useRef<HTMLDivElement>(null)
+
+  // Calcula la edad automáticamente desde el DNI hondureño (grupo 2 = año)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const year = parseBirthYearFromDNI(dniValue ?? '')
+    if (year !== null) {
+      form.setValue('age', new Date().getFullYear() - year, { shouldDirty: false, shouldValidate: false })
+    }
+  }, [dniValue])
 
   // ─── Config maps ──────────────────────────────────────────────────────────
   const cfgMap   = useMemo(() => new Map(allFieldConfigs.map(c => [c.fieldKey, c])), [allFieldConfigs])
@@ -217,6 +240,7 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
                       required={isReq(fc.fieldKey)}
                       placeholder={fc.placeholder ?? undefined}
                       form={form}
+                      dniValue={dniValue}
                     />
                   ))}
                 </div>
@@ -240,6 +264,7 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
                       required={isReq(fc.fieldKey)}
                       placeholder={fc.placeholder ?? undefined}
                       form={form}
+                      dniValue={dniValue}
                     />
                   ))}
                 </div>
@@ -429,12 +454,14 @@ function CoreField({
   required,
   placeholder,
   form,
+  dniValue,
 }: {
   fieldKey:     string
   label:        string
   required:     boolean
   placeholder?: string | undefined
   form:         ReturnType<typeof useForm<PersonaFormValues>>
+  dniValue?:    string | undefined
 }) {
   switch (fieldKey) {
     case 'fullName':
@@ -457,10 +484,10 @@ function CoreField({
             <FormItem>
               <FormLabel>{label}<RequiredMark required={required} /></FormLabel>
               <FormControl>
-                <Input {...field} placeholder={placeholder ?? '0000000000000'} maxLength={13}
+                <Input {...field} placeholder={placeholder ?? '08011995033990'} maxLength={14}
                   inputMode="numeric" className="font-mono tracking-widest text-base" />
               </FormControl>
-              <FormDescription>13 dígitos sin guiones ni espacios</FormDescription>
+              <FormDescription>14 dígitos sin guiones — Ej: 0801<strong>1995</strong>033990</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -493,40 +520,43 @@ function CoreField({
         />
       )
 
-    case 'age':
+    case 'age': {
+      const birthYear = parseBirthYearFromDNI(dniValue ?? '')
+      const autoAge   = birthYear !== null ? new Date().getFullYear() - birthYear : null
       return (
         <FormField name="age" control={form.control}
           render={({ field }) => (
             <FormItem>
               <FormLabel>{label}<RequiredMark required={required} /></FormLabel>
-              <FormControl>
-                <Input type="number" placeholder={placeholder ?? '25'} min={16} max={99} inputMode="numeric"
-                  value={field.value ?? ''}
-                  onChange={e => {
-                    const v = e.target.value
-                    field.onChange(v === '' ? undefined : parseInt(v, 10))
-                  }}
-                  onBlur={field.onBlur} name={field.name} ref={field.ref}
-                />
-              </FormControl>
+              {autoAge !== null ? (
+                <div className="flex items-center gap-2 h-8 rounded-lg border border-border bg-muted/40 px-3">
+                  <span className="font-mono text-sm font-semibold text-foreground">{autoAge}</span>
+                  <span className="text-xs text-muted-foreground">años</span>
+                  <span className="ml-auto rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                    Calculado desde DNI
+                  </span>
+                </div>
+              ) : (
+                <FormControl>
+                  <Input type="number" placeholder={placeholder ?? '30'} min={0} max={120} inputMode="numeric"
+                    value={field.value ?? ''}
+                    onChange={e => {
+                      const v = e.target.value
+                      field.onChange(v === '' ? undefined : parseInt(v, 10))
+                    }}
+                    onBlur={field.onBlur} name={field.name} ref={field.ref}
+                  />
+                </FormControl>
+              )}
               <FormMessage />
             </FormItem>
           )}
         />
       )
+    }
 
     case 'profession':
-      return (
-        <FormField name="profession" control={form.control}
-          render={({ field }) => (
-            <FormItem className="sm:col-span-2">
-              <FormLabel>{label}<RequiredMark required={required} /></FormLabel>
-              <FormControl><Input placeholder={placeholder ?? 'Ej. Ingeniero, Docente, Técnico…'} {...field} value={field.value ?? ''} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )
+      return <ProfessionTagInput form={form} label={label} required={required} placeholder={placeholder} />
 
     case 'workedForState':
       return (
@@ -586,6 +616,95 @@ function CoreField({
     default:
       return null
   }
+}
+
+// ─── ProfessionTagInput — multi-carrera/oficio/grado ─────────────────────────
+
+function ProfessionTagInput({
+  form, label, required, placeholder,
+}: {
+  form:         ReturnType<typeof useForm<PersonaFormValues>>
+  label:        string
+  required:     boolean
+  placeholder?: string | undefined
+}) {
+  const [input, setInput] = useState('')
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const professions = (form.watch('profession') as string[] | undefined) ?? []
+
+  const add = () => {
+    const trimmed = input.trim()
+    if (!trimmed || professions.includes(trimmed)) return
+    form.setValue('profession', [...professions, trimmed], { shouldValidate: true })
+    setInput('')
+  }
+
+  const remove = (p: string) => {
+    form.setValue('profession', professions.filter(x => x !== p), { shouldValidate: true })
+  }
+
+  return (
+    <FormField
+      name="profession"
+      control={form.control}
+      render={() => (
+        <FormItem className="sm:col-span-2">
+          <FormLabel>{label}<RequiredMark required={required} /></FormLabel>
+          <FormControl>
+            <div className="space-y-2">
+              {professions.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {professions.map(p => (
+                    <span
+                      key={p}
+                      className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+                    >
+                      {p}
+                      <button
+                        type="button"
+                        onClick={() => remove(p)}
+                        className="ml-0.5 transition-colors hover:text-destructive"
+                        aria-label={`Eliminar ${p}`}
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Input
+                  placeholder={placeholder ?? 'Ej: Ingeniero Civil, Maestría en Administración…'}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                      e.preventDefault()
+                      add()
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={add}
+                  aria-label="Agregar profesión"
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </div>
+            </div>
+          </FormControl>
+          <FormDescription>
+            Presiona <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Enter</kbd> o coma para agregar. Puede incluir carreras, maestrías y doctorados.
+          </FormDescription>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
 }
 
 // ─── DynamicField — campos personalizados ────────────────────────────────────
