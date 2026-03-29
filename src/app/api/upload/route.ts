@@ -85,6 +85,13 @@ export async function POST(request: NextRequest) {
       stream.end(buffer)
     })
 
+    console.log('[upload] resultado Cloudinary:', {
+      public_id:  result.public_id,
+      secure_url: result.secure_url,
+      format:     result.format,
+      bytes:      result.bytes,
+    })
+
     return NextResponse.json({
       url:      result.secure_url,
       publicId: result.public_id,
