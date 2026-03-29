@@ -42,19 +42,41 @@ export async function POST(request: NextRequest) {
     const bytes  = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // PDFs must be 'raw'; photos are 'image'. 'auto' can assign 'raw' to PDFs
-    // but may result in 401 on delivery — be explicit per folder.
+    // PDFs must be 'raw'; photos are 'image'.
     const resourceType = folder === 'cvs' ? 'raw' : 'image'
+
+    // For raw uploads (CVs), Cloudinary only serves the correct Content-Type
+    // (application/pdf) when the public_id includes the file extension.
+    // Without it, it serves application/octet-stream → browser can't open.
+    const buildUploadOptions = () => {
+      if (resourceType === 'raw') {
+        const originalName = file.name || 'file'
+        const extMatch = originalName.match(/\.([^.]+)$/)
+        const ext = extMatch?.[1]?.toLowerCase() ?? 'pdf'
+        const base = originalName
+          .replace(/\.[^.]+$/, '')
+          .replace(/[^a-zA-Z0-9-]/g, '_')
+          .toLowerCase()
+          .slice(0, 50)
+        const uid = Date.now().toString(36)
+        return {
+          public_id:     `cuadernolaboral/${folder}/${base}_${uid}.${ext}`,
+          resource_type: 'raw' as const,
+          access_mode:   'public' as const,
+        }
+      }
+      return {
+        folder:          `cuadernolaboral/${folder}`,
+        resource_type:   'image' as const,
+        access_mode:     'public' as const,
+        use_filename:    true,
+        unique_filename: true,
+      }
+    }
 
     const result = await new Promise<CloudinaryResult>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        {
-          folder:          `cuadernolaboral/${folder}`,
-          resource_type:   resourceType,
-          access_mode:     'public',
-          use_filename:    true,
-          unique_filename: true,
-        },
+        buildUploadOptions(),
         (error, res) => {
           if (error || !res) reject(error ?? new Error('Sin respuesta de Cloudinary'))
           else resolve(res as CloudinaryResult)

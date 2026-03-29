@@ -67,6 +67,21 @@ async function main() {
     },
   })
 
+  const detallePerfil = await prisma.formFieldConfig.upsert({
+    where:  { fieldKey: 'detallePerfil' },
+    update: {},
+    create: {
+      label:       'Detalle del perfil',
+      fieldKey:    'detallePerfil',
+      type:        'TEXTAREA',
+      required:    false,
+      placeholder: 'Descripción del perfil profesional, experiencia relevante, observaciones...',
+      options:     [],
+      order:       5,
+      active:      true,
+    },
+  })
+
   // ── Personas ───────────────────────────────────────────────────────
 
   // 1 — Sin demanda, sin vinculado
@@ -206,7 +221,7 @@ async function main() {
 
   console.log('✅ Seed completado:')
   console.log(`   Usuarios: ${admin.username} (ADMIN) | ${viewer.username} (VIEWER)`)
-  console.log(`   FormFieldConfig: municipio(${municipio.id}), nivelEducativo(${nivelEducativo.id}), completoNivel(${completoNivel.id}), fechaNacimiento(${fechaNacimiento.id})`)
+  console.log(`   FormFieldConfig: municipio(${municipio.id}), nivelEducativo(${nivelEducativo.id}), completoNivel(${completoNivel.id}), fechaNacimiento(${fechaNacimiento.id}), detallePerfil(${detallePerfil.id})`)
   console.log(`   Personas: ${[persona1, persona2, persona3, persona4, persona5].map(p => p.fullName).join(' | ')}`)
 }
 
