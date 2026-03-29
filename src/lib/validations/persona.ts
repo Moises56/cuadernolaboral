@@ -7,9 +7,9 @@ export const ContractTypeLabels = {
   CONTRATO: 'Contrato',
 } as const satisfies Record<string, string>
 
-// ─── DNI hondureño: XXXX-YYYY-NNNNNN (14 dígitos sin guiones) ──────────────
-const DNI_REGEX = /^\d{14}$/
-const DNI_ERROR = 'El DNI debe tener 14 dígitos (formato: 0801-1995-033990)'
+// ─── DNI hondureño: XXXX-YYYY-NNNNNN (con guiones, ej: 0801-1995-033990) ────
+const DNI_REGEX = /^\d{4}-\d{4}-\d{6}$/
+const DNI_ERROR = 'El DNI debe tener el formato 0801-1995-033990'
 
 // ─── Schema del familiar designado ────────────────────────────────────────
 export const relatedPersonSchema = z.object({

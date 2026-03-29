@@ -62,13 +62,11 @@ export async function POST(request: NextRequest) {
         return {
           public_id:     `cuadernolaboral/${folder}/${base}_${uid}.${ext}`,
           resource_type: 'raw' as const,
-          access_mode:   'public' as const,
         }
       }
       return {
         folder:          `cuadernolaboral/${folder}`,
         resource_type:   'image' as const,
-        access_mode:     'public' as const,
         use_filename:    true,
         unique_filename: true,
       }
