@@ -42,11 +42,16 @@ export async function POST(request: NextRequest) {
     const bytes  = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
+    // PDFs must be 'raw'; photos are 'image'. 'auto' can assign 'raw' to PDFs
+    // but may result in 401 on delivery — be explicit per folder.
+    const resourceType = folder === 'cvs' ? 'raw' : 'image'
+
     const result = await new Promise<CloudinaryResult>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder:          `cuadernolaboral/${folder}`,
-          resource_type:   'auto',
+          resource_type:   resourceType,
+          access_mode:     'public',
           use_filename:    true,
           unique_filename: true,
         },
