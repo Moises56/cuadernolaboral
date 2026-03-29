@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  AlignLeft,
+  Download,
 } from 'lucide-react'
 import type { Metadata } from 'next'
 
@@ -140,6 +142,9 @@ export default async function PersonaDetailPage({
 
   if (!person) notFound()
 
+  const detallePerfil    = person.dynamicValues.find(dv => dv.field.fieldKey === 'detallePerfil')
+  const otherDynamicValues = person.dynamicValues.filter(dv => dv.field.fieldKey !== 'detallePerfil')
+
   const assigneePerson = {
     id:           person.id,
     fullName:     person.fullName,
@@ -256,11 +261,20 @@ export default async function PersonaDetailPage({
             </div>
           </SectionCard>
 
+          {/* Detalle del perfil — sección propia */}
+          {detallePerfil && (
+            <SectionCard icon={AlignLeft} title="Detalle del Perfil">
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                {detallePerfil.value}
+              </p>
+            </SectionCard>
+          )}
+
           {/* Dynamic custom fields */}
-          {person.dynamicValues.length > 0 && (
+          {otherDynamicValues.length > 0 && (
             <SectionCard icon={FileText} title="Campos Adicionales">
               <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
-                {person.dynamicValues.map(dv => (
+                {otherDynamicValues.map(dv => (
                   <InfoRow
                     key={dv.id}
                     label={dv.field.label}
@@ -337,15 +351,24 @@ export default async function PersonaDetailPage({
                 <FileText className="size-4 text-primary" />
                 <h2 className="text-sm font-semibold text-foreground">Currículum Vitae</h2>
               </div>
-              <a
-                href={person.cvUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
-              >
-                <FileText className="size-3" />
-                Ver CV
-              </a>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href={person.cvUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+                >
+                  <FileText className="size-3" />
+                  Ver CV
+                </a>
+                <a
+                  href={`/api/download?url=${encodeURIComponent(person.cvUrl)}&name=${encodeURIComponent(person.fullName)}`}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                >
+                  <Download className="size-3" />
+                  Descargar
+                </a>
+              </div>
             </div>
           )}
 
