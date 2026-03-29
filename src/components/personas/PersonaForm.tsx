@@ -757,12 +757,19 @@ function DynamicInput({ config, field }: {
     case 'DATE':
       return <Input type="date" {...field} value={field.value ?? ''} />
 
-    case 'BOOLEAN':
+    case 'BOOLEAN': {
+      // Values are stored as strings 'true'/'false' in DB and passed around as such.
+      // !!field.value would treat 'false' (non-empty string) as truthy — must compare explicitly.
+      const isChecked = field.value === 'true' || field.value === true
       return (
         <div className="flex items-center pt-1">
-          <Switch checked={!!field.value} onCheckedChange={field.onChange} />
+          <Switch
+            checked={isChecked}
+            onCheckedChange={(v) => field.onChange(v ? 'true' : 'false')}
+          />
         </div>
       )
+    }
 
     case 'SELECT':
       return (

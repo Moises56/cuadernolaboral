@@ -63,7 +63,8 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
     let s: z.ZodTypeAny
     switch (field.type) {
       case 'NUMBER':  s = z.coerce.number(); break
-      case 'BOOLEAN': s = z.boolean(); break
+      // BOOLEAN stored as 'true'/'false' string in DB and DynamicInput; not a JS boolean
+      case 'BOOLEAN': s = z.string(); break
       case 'EMAIL':   s = z.union([z.string().email('Email inválido'), z.literal('')]); break
       default:        s = z.string()
     }
@@ -84,7 +85,7 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
         email:        z.union([z.string().email('Email inválido'), z.literal('')]).optional(),
         relationship: z.string().optional(),
       }).optional(),
-      dynamicFields: z.record(z.string(), z.string()).optional(),
+      dynamicFields: z.record(z.string(), z.coerce.string()).optional(),
     })
     .superRefine((data, ctx) => {
       if (!data.hasDemand) return
@@ -126,7 +127,7 @@ export const personaFormSchema = personaBaseSchema
       email:        z.union([z.string().email('Email inválido'), z.literal('')]).optional(),
       relationship: z.string().optional(),
     }).optional(),
-    dynamicFields: z.record(z.string(), z.string()).optional(),
+    dynamicFields: z.record(z.string(), z.coerce.string()).optional(),
   })
   .superRefine((data, ctx) => {
     if (!data.hasDemand) return

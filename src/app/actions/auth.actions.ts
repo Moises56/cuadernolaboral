@@ -23,14 +23,19 @@ export async function loginAction(
   // Delay mínimo — dificulta timing attacks
   await new Promise((r) => setTimeout(r, 300))
 
-  const user = await verifyCredentials(username, password)
-  if (!user) {
-    // Mensaje genérico — no revela si el usuario existe
-    return { success: false, error: 'Usuario o contraseña incorrectos' }
+  try {
+    const user = await verifyCredentials(username, password)
+    if (!user) {
+      // Mensaje genérico — no revela si el usuario existe
+      return { success: false, error: 'Usuario o contraseña incorrectos' }
+    }
+    await createSession(user.id)
+    return { success: true, data: undefined }
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error)
+    console.error('[loginAction]', detail)
+    return { success: false, error: `Error al iniciar sesión. Intente nuevamente. (${detail})` }
   }
-
-  await createSession(user.id)
-  return { success: true, data: undefined }
 }
 
 export async function logoutAction(): Promise<void> {

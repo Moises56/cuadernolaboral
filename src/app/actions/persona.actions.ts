@@ -204,8 +204,9 @@ export async function updatePersonaAction(
         }
       }
     }
-    console.error('[updatePersonaAction]', error)
-    return { success: false, error: 'Error al actualizar el registro. Intente nuevamente.' }
+    const detail = error instanceof Error ? error.message : String(error)
+    console.error('[updatePersonaAction]', detail, error)
+    return { success: false, error: `Error al actualizar el registro: ${detail}` }
   }
 }
 

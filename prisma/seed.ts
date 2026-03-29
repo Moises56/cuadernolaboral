@@ -27,28 +27,42 @@ async function main() {
 
   const nivelEducativo = await prisma.formFieldConfig.upsert({
     where:  { fieldKey: 'nivelEducativo' },
-    update: {},
+    update: { options: ['Primaria', 'Secundaria', 'Universidad', 'Maestría', 'Doctorado'], required: false },
     create: {
       label:    'Nivel educativo',
       fieldKey: 'nivelEducativo',
       type:     'SELECT',
       required: false,
-      options:  ['Primario', 'Secundario', 'Terciario', 'Universitario', 'Posgrado'],
+      options:  ['Primaria', 'Secundaria', 'Universidad', 'Maestría', 'Doctorado'],
       order:    2,
+      active:   true,
+    },
+  })
+
+  const completoNivel = await prisma.formFieldConfig.upsert({
+    where:  { fieldKey: 'completoNivel' },
+    update: {},
+    create: {
+      label:    '¿Completó el nivel?',
+      fieldKey: 'completoNivel',
+      type:     'BOOLEAN',
+      required: false,
+      options:  [],
+      order:    3,
       active:   true,
     },
   })
 
   const fechaNacimiento = await prisma.formFieldConfig.upsert({
     where:  { fieldKey: 'fechaNacimiento' },
-    update: {},
+    update: { order: 4 },
     create: {
       label:    'Fecha de nacimiento',
       fieldKey: 'fechaNacimiento',
       type:     'DATE',
       required: false,
       options:  [],
-      order:    3,
+      order:    4,
       active:   true,
     },
   })
@@ -192,7 +206,7 @@ async function main() {
 
   console.log('✅ Seed completado:')
   console.log(`   Usuarios: ${admin.username} (ADMIN) | ${viewer.username} (VIEWER)`)
-  console.log(`   FormFieldConfig: municipio(${municipio.id}), nivelEducativo(${nivelEducativo.id}), fechaNacimiento(${fechaNacimiento.id})`)
+  console.log(`   FormFieldConfig: municipio(${municipio.id}), nivelEducativo(${nivelEducativo.id}), completoNivel(${completoNivel.id}), fechaNacimiento(${fechaNacimiento.id})`)
   console.log(`   Personas: ${[persona1, persona2, persona3, persona4, persona5].map(p => p.fullName).join(' | ')}`)
 }
 
