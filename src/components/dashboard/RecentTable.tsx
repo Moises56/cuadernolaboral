@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { gsap, ScrollTrigger, useGSAP, ANIM } from '@/lib/gsap.config'
 import { Badge } from '@/components/ui/badge'
 
@@ -18,6 +19,7 @@ export interface RecentPerson {
 
 export function RecentTable({ persons }: { persons: RecentPerson[] }) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const router       = useRouter()
 
   useGSAP(
     () => {
@@ -86,9 +88,10 @@ export function RecentTable({ persons }: { persons: RecentPerson[] }) {
             {persons.map((person) => (
               <tr
                 key={person.id}
-                className="recent-row border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors"
+                onClick={() => router.push(`/personas/${person.id}`)}
+                className="recent-row border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors cursor-pointer"
               >
-                <td className="px-5 py-3.5 font-medium text-foreground whitespace-nowrap">
+                <td className="px-5 py-3.5 font-medium text-foreground whitespace-nowrap hover:text-primary transition-colors">
                   {person.fullName}
                 </td>
                 <td className="px-5 py-3.5 font-mono text-muted-foreground whitespace-nowrap">
