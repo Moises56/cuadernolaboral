@@ -6,79 +6,59 @@ import {
   Page,
   Text,
   View,
+  Link,
   StyleSheet,
 } from '@react-pdf/renderer'
 import { prisma } from '@/lib/prisma'
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-const COLOR_PRIMARY    = '#1e3a5f'
-const COLOR_HEADER_ALT = '#2d4f7c'
-const COLOR_BG         = '#f8fafc'
-const COLOR_ROW_EVEN   = '#f1f5f9'
+const COLOR_PRIMARY    = '#6B3FA0'
+const COLOR_HEADER_ALT = '#7D4FB8'
+const COLOR_BG         = '#FAFAF9'
+const COLOR_ROW_EVEN   = '#F3EEF9'
 const COLOR_ROW_ODD    = '#ffffff'
-const COLOR_MUTED      = '#64748b'
-const COLOR_DEMAND     = '#b45309'
-const COLOR_BORDER     = '#e2e8f0'
+const COLOR_MUTED      = '#6B6880'
+const COLOR_BORDER     = '#E8E2F0'
 const COLOR_WHITE      = '#ffffff'
+const COLOR_LINK       = '#0563C1'
 
-// ─── PDF styles ───────────────────────────────────────────────────────────────
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   page: {
     backgroundColor: COLOR_BG,
-    paddingTop:      32,
+    paddingTop:      30,
     paddingBottom:   44,
-    paddingLeft:     28,
-    paddingRight:    28,
+    paddingLeft:     24,
+    paddingRight:    24,
     fontFamily:      'Helvetica',
     fontSize:        8,
   },
-  // Header
   headerBlock: {
-    backgroundColor: COLOR_PRIMARY,
-    borderRadius:    4,
-    paddingVertical: 10,
+    backgroundColor:   COLOR_PRIMARY,
+    borderRadius:      4,
+    paddingVertical:   10,
     paddingHorizontal: 14,
-    marginBottom:    14,
-    flexDirection:   'row',
-    justifyContent:  'space-between',
-    alignItems:      'center',
+    marginBottom:      12,
+    flexDirection:     'row',
+    justifyContent:    'space-between',
+    alignItems:        'center',
   },
-  headerTitle: {
-    fontSize:   13,
-    fontFamily: 'Helvetica-Bold',
-    color:      COLOR_WHITE,
-  },
-  headerMeta: {
-    fontSize: 8,
-    color:    '#93c5fd',
-  },
-  // Summary row
-  summaryRow: {
-    flexDirection:   'row',
-    gap:             8,
-    marginBottom:    10,
-  },
+  headerTitle: { fontSize: 13, fontFamily: 'Helvetica-Bold', color: COLOR_WHITE },
+  headerMeta:  { fontSize: 8,  color: '#C4A8E8' },
+  summaryRow:  { flexDirection: 'row', gap: 8, marginBottom: 10 },
   summaryChip: {
-    backgroundColor: COLOR_WHITE,
-    borderRadius:    3,
-    paddingVertical:  3,
+    backgroundColor:   COLOR_WHITE,
+    borderRadius:      3,
+    paddingVertical:   3,
     paddingHorizontal: 7,
-    borderWidth:     0.5,
-    borderColor:     COLOR_BORDER,
-    flexDirection:   'row',
-    alignItems:      'center',
-    gap:             3,
+    borderWidth:       0.5,
+    borderColor:       COLOR_BORDER,
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               3,
   },
-  summaryLabel: {
-    fontSize: 7.5,
-    color:    COLOR_MUTED,
-  },
-  summaryValue: {
-    fontSize:   8.5,
-    fontFamily: 'Helvetica-Bold',
-    color:      COLOR_PRIMARY,
-  },
-  // Table
+  summaryLabel: { fontSize: 7.5, color: COLOR_MUTED },
+  summaryValue: { fontSize: 8.5, fontFamily: 'Helvetica-Bold', color: COLOR_PRIMARY },
   tableHeader: {
     flexDirection:     'row',
     backgroundColor:   COLOR_HEADER_ALT,
@@ -92,119 +72,67 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     borderBottomWidth: 0.5,
     borderBottomColor: COLOR_BORDER,
+    minHeight:         16,
   },
-  tableRowEven: {
-    backgroundColor: COLOR_ROW_EVEN,
-  },
-  tableRowOdd: {
-    backgroundColor: COLOR_ROW_ODD,
-  },
+  tableRowEven: { backgroundColor: COLOR_ROW_EVEN },
+  tableRowOdd:  { backgroundColor: COLOR_ROW_ODD  },
   headerCell: {
-    fontFamily: 'Helvetica-Bold',
-    fontSize:   7.5,
-    color:      COLOR_WHITE,
+    fontFamily:   'Helvetica-Bold',
+    fontSize:     7.5,
+    color:        COLOR_WHITE,
     paddingRight: 4,
   },
-  cell: {
-    fontSize:    8,
-    color:       '#0f172a',
-    paddingRight: 4,
-  },
-  cellMuted: {
-    fontSize:    8,
-    color:       COLOR_MUTED,
-    paddingRight: 4,
-  },
-  cellMono: {
-    fontFamily:  'Courier',
-    fontSize:    7.5,
-    color:       COLOR_MUTED,
-    paddingRight: 4,
-  },
-  cellDemand: {
-    fontSize:   7.5,
-    color:      COLOR_DEMAND,
-    fontFamily: 'Helvetica-Bold',
-  },
-  // Footer
+  cell:      { fontSize: 8,   color: '#0f172a',   paddingRight: 4 },
+  cellMuted: { fontSize: 7.5, color: COLOR_MUTED,  paddingRight: 4 },
+  cellMono:  { fontFamily: 'Courier', fontSize: 7.5, color: COLOR_MUTED, paddingRight: 4 },
+  cellBold:  { fontFamily: 'Helvetica-Bold', fontSize: 8, color: '#0f172a', paddingRight: 4 },
+  cellLink:  { fontSize: 7.5, color: COLOR_LINK,   paddingRight: 4, textDecoration: 'underline' },
   footer: {
-    position:   'absolute',
-    bottom:     18,
-    left:       28,
-    right:      28,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 0.5,
-    borderTopColor: COLOR_BORDER,
-    paddingTop:  5,
+    position:        'absolute',
+    bottom:          18,
+    left:            24,
+    right:           24,
+    flexDirection:   'row',
+    justifyContent:  'space-between',
+    alignItems:      'center',
+    borderTopWidth:  0.5,
+    borderTopColor:  COLOR_BORDER,
+    paddingTop:      5,
   },
-  footerText: {
-    fontSize: 7,
-    color:    COLOR_MUTED,
-  },
-  pageNum: {
-    fontSize: 7,
-    color:    COLOR_MUTED,
-  },
+  footerText: { fontSize: 7, color: COLOR_MUTED },
+  pageNum:    { fontSize: 7, color: COLOR_MUTED },
 })
 
-// ─── Column definitions (max 8) ───────────────────────────────────────────────
+// ─── Column layout ────────────────────────────────────────────────────────────
 const COLUMNS = [
-  { key: 'fullName',     label: 'Nombre completo',  flex: 20, style: styles.cell },
-  { key: 'dni',          label: 'DNI',               flex: 11, style: styles.cellMono },
-  { key: 'phone',        label: 'Teléfono',          flex: 11, style: styles.cellMono },
-  { key: 'profession',   label: 'Profesión',         flex: 14, style: styles.cellMuted },
-  { key: 'hasDemand',    label: 'Demanda',            flex: 9,  style: styles.cell },
-  { key: 'workPlace',    label: 'Plaza',              flex: 18, style: styles.cellMuted },
-  { key: 'contractType', label: 'Contrato',           flex: 10, style: styles.cellMuted },
-  { key: 'createdAt',    label: 'Registrado',         flex: 10, style: styles.cellMuted },
+  { key: 'fullName',       label: 'Nombre',             flex: 17 },
+  { key: 'dni',            label: 'DNI',                flex: 11 },
+  { key: 'phone',          label: 'Teléfono',           flex: 10 },
+  { key: 'email',          label: 'Correo',             flex: 15 },
+  { key: 'nivelEducativo', label: 'Nivel Educativo',    flex: 11 },
+  { key: 'cvUrl',          label: 'CV',                 flex: 9  },
+  { key: 'detallePerfil',  label: 'Detalle del Perfil', flex: 27 },
 ] as const
 
 type ColKey = (typeof COLUMNS)[number]['key']
 
+// ─── Data type ────────────────────────────────────────────────────────────────
 interface PersonaData {
-  id:           string
-  fullName:     string
-  dni:          string
-  phone:        string
-  profession:   string[]
-  hasDemand:    boolean
-  workPlace:    string | null
-  contractType: string | null
-  createdAt:    Date
+  id:              string
+  fullName:        string
+  dni:             string
+  phone:           string
+  email:           string | null
+  cvUrl:           string | null
+  nivelEducativo:  string
+  detallePerfil:   string
 }
 
-function getCellValue(persona: PersonaData, key: ColKey): string {
-  switch (key) {
-    case 'fullName':
-      return persona.fullName
-    case 'dni':
-      return persona.dni
-    case 'phone':
-      return persona.phone
-    case 'profession':
-      return persona.profession.join(', ') || '—'
-    case 'hasDemand':
-      return persona.hasDemand ? 'Sí' : 'No'
-    case 'workPlace':
-      return persona.workPlace ?? 'Pendiente'
-    case 'contractType':
-      return persona.contractType === 'ACUERDO'
-        ? 'Acuerdo'
-        : persona.contractType === 'CONTRATO'
-          ? 'Contrato'
-          : '—'
-    case 'createdAt':
-      return new Date(persona.createdAt).toLocaleDateString('es-AR', {
-        day:   '2-digit',
-        month: '2-digit',
-        year:  'numeric',
-      })
-  }
+function truncate(str: string, max: number): string {
+  return str.length > max ? str.slice(0, max) + '…' : str
 }
 
-// ─── PDF Document ────────────────────────────────────────────────────────────
+// ─── PDF Document ─────────────────────────────────────────────────────────────
 function CuadernoLaboralPDF({
   personas,
   total,
@@ -225,18 +153,17 @@ function CuadernoLaboralPDF({
       subject="Exportación de registro laboral"
     >
       <Page size="A4" orientation="landscape" style={styles.page} wrap>
-        {/* ── Header ─────────────────────────────────────────────────────── */}
+
+        {/* Header */}
         <View style={styles.headerBlock} fixed>
           <View>
             <Text style={styles.headerTitle}>CuadernoLaboral</Text>
             <Text style={styles.headerMeta}>Registro Laboral — Exportación oficial</Text>
           </View>
-          <View>
-            <Text style={styles.headerMeta}>Generado el {generatedAt}</Text>
-          </View>
+          <Text style={styles.headerMeta}>Generado el {generatedAt}</Text>
         </View>
 
-        {/* ── Summary chips ───────────────────────────────────────────────── */}
+        {/* Summary */}
         <View style={styles.summaryRow} fixed>
           <View style={styles.summaryChip}>
             <Text style={styles.summaryLabel}>Total</Text>
@@ -244,7 +171,7 @@ function CuadernoLaboralPDF({
           </View>
           <View style={styles.summaryChip}>
             <Text style={styles.summaryLabel}>Con demanda</Text>
-            <Text style={[styles.summaryValue, { color: COLOR_DEMAND }]}>{conDemanda}</Text>
+            <Text style={[styles.summaryValue, { color: '#b45309' }]}>{conDemanda}</Text>
           </View>
           <View style={styles.summaryChip}>
             <Text style={styles.summaryLabel}>Con plaza</Text>
@@ -252,7 +179,7 @@ function CuadernoLaboralPDF({
           </View>
         </View>
 
-        {/* ── Table header ─────────────────────────────────────────────────── */}
+        {/* Table header */}
         <View style={styles.tableHeader} fixed>
           {COLUMNS.map((col) => (
             <Text key={col.key} style={[styles.headerCell, { flex: col.flex }]}>
@@ -261,45 +188,70 @@ function CuadernoLaboralPDF({
           ))}
         </View>
 
-        {/* ── Data rows ────────────────────────────────────────────────────── */}
-        {personas.map((persona, idx) => (
+        {/* Data rows */}
+        {personas.map((p, idx) => (
           <View
-            key={persona.id}
-            style={[
-              styles.tableRow,
-              idx % 2 === 0 ? styles.tableRowEven : styles.tableRowOdd,
-            ]}
+            key={p.id}
+            style={[styles.tableRow, idx % 2 === 0 ? styles.tableRowEven : styles.tableRowOdd]}
             wrap={false}
           >
             {COLUMNS.map((col) => {
-              const value  = getCellValue(persona, col.key)
-              const isName = col.key === 'fullName'
-              const isDemand = col.key === 'hasDemand' && persona.hasDemand
+              const key = col.key as ColKey
+
+              if (key === 'cvUrl') {
+                return p.cvUrl ? (
+                  <Link key={key} src={p.cvUrl} style={{ flex: col.flex }}>
+                    <Text style={styles.cellLink}>Ver CV</Text>
+                  </Link>
+                ) : (
+                  <Text key={key} style={[styles.cellMuted, { flex: col.flex }]}>—</Text>
+                )
+              }
+
+              let text = ''
+              let cellStyle = styles.cell
+              switch (key) {
+                case 'fullName':
+                  text = p.fullName
+                  cellStyle = styles.cellBold
+                  break
+                case 'dni':
+                  text = p.dni
+                  cellStyle = styles.cellMono
+                  break
+                case 'phone':
+                  text = p.phone
+                  cellStyle = styles.cellMono
+                  break
+                case 'email':
+                  text = p.email ?? '—'
+                  cellStyle = styles.cellMuted
+                  break
+                case 'nivelEducativo':
+                  text = p.nivelEducativo || '—'
+                  cellStyle = styles.cellMuted
+                  break
+                case 'detallePerfil':
+                  text = p.detallePerfil ? truncate(p.detallePerfil, 120) : '—'
+                  cellStyle = styles.cellMuted
+                  break
+              }
+
               return (
-                <Text
-                  key={col.key}
-                  style={[
-                    col.style,
-                    { flex: col.flex },
-                    ...(isName   ? [{ fontFamily: 'Helvetica-Bold', color: '#0f172a' }] : []),
-                    ...(isDemand ? [styles.cellDemand] : []),
-                  ]}
-                >
-                  {value}
+                <Text key={key} style={[cellStyle, { flex: col.flex }]}>
+                  {text}
                 </Text>
               )
             })}
           </View>
         ))}
 
-        {/* ── Footer ───────────────────────────────────────────────────────── */}
+        {/* Footer */}
         <View style={styles.footer} fixed>
           <Text style={styles.footerText}>CuadernoLaboral — Documento de uso oficial</Text>
           <Text
             style={styles.pageNum}
-            render={({ pageNumber, totalPages }) =>
-              `Página ${pageNumber} de ${totalPages}`
-            }
+            render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
           />
         </View>
       </Page>
@@ -311,7 +263,6 @@ function CuadernoLaboralPDF({
 export async function GET(req: NextRequest) {
   try {
     const sp = req.nextUrl.searchParams
-
     const q       = (sp.get('q')     ?? '').trim()
     const demanda = sp.get('demanda') ?? 'all'
     const plaza   = sp.get('plaza')   ?? 'all'
@@ -319,29 +270,29 @@ export async function GET(req: NextRequest) {
     const where = {
       ...(q && {
         OR: [
-          { fullName:   { contains: q, mode: 'insensitive' as const } },
-          { dni:        { contains: q } },
+          { fullName: { contains: q, mode: 'insensitive' as const } },
+          { dni:      { contains: q } },
         ],
       }),
-      ...(demanda === 'con' && { hasDemand: true }),
+      ...(demanda === 'con' && { hasDemand: true  }),
       ...(demanda === 'sin' && { hasDemand: false }),
       ...(plaza === 'asignada'  && { workPlace: { not: null } }),
       ...(plaza === 'pendiente' && { workPlace: null }),
     }
 
-    const [personas, total, conDemanda, conPlaza] = await Promise.all([
+    const [rows, total, conDemanda, conPlaza] = await Promise.all([
       prisma.person.findMany({
         where,
         select: {
-          id:           true,
-          fullName:     true,
-          dni:          true,
-          phone:        true,
-          profession:   true,
-          hasDemand:    true,
-          workPlace:    true,
-          contractType: true,
-          createdAt:    true,
+          id:       true,
+          fullName: true,
+          dni:      true,
+          phone:    true,
+          email:    true,
+          cvUrl:    true,
+          dynamicValues: {
+            include: { field: { select: { fieldKey: true } } },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -350,38 +301,41 @@ export async function GET(req: NextRequest) {
       prisma.person.count({ where: { workPlace: { not: null } } }),
     ])
 
-    const generatedAt = new Date().toLocaleDateString('es-AR', {
-      weekday: 'long',
-      day:     '2-digit',
-      month:   'long',
-      year:    'numeric',
+    const personas: PersonaData[] = rows.map((p) => {
+      const dyn: Record<string, string> = {}
+      p.dynamicValues.forEach((dv) => { dyn[dv.field.fieldKey] = dv.value })
+      return {
+        id:             p.id,
+        fullName:       p.fullName,
+        dni:            p.dni,
+        phone:          p.phone,
+        email:          p.email,
+        cvUrl:          p.cvUrl,
+        nivelEducativo: dyn['nivelEducativo'] ?? '',
+        detallePerfil:  dyn['detallePerfil']  ?? '',
+      }
+    })
+
+    const generatedAt = new Date().toLocaleDateString('es-HN', {
+      weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
     })
 
     const pdfElement = React.createElement(CuadernoLaboralPDF, {
-      personas:    personas as PersonaData[],
-      total,
-      conDemanda,
-      conPlaza,
-      generatedAt,
+      personas, total, conDemanda, conPlaza, generatedAt,
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- renderToBuffer types don't accept ReactElement<unknown>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const buffer = await renderToBuffer(pdfElement as any)
 
     return new NextResponse(buffer as unknown as BodyInit, {
       status: 200,
       headers: {
         'Content-Type':        'application/pdf',
-        'Content-Disposition': `attachment; filename="CuadernoLaboral-${
-          new Date().toISOString().slice(0, 10)
-        }.pdf"`,
+        'Content-Disposition': `attachment; filename="CuadernoLaboral-${new Date().toISOString().slice(0, 10)}.pdf"`,
         'Cache-Control':       'no-store',
       },
     })
   } catch (error) {
     console.error('[export/pdf]', error)
-    return NextResponse.json(
-      { error: 'Error al generar el PDF' },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: 'Error al generar el PDF' }, { status: 500 })
   }
 }
