@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  VIEWER
+}
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  passwordHash String
+  role         UserRole  @default(VIEWER)
+  displayName  String
+  active       Boolean   @default(true)
+  sessions     Session[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([username])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ── Form / Labor registry ──────────────────────────────────────────────────────
+
+enum FieldType {
+  TEXT
+  NUMBER
+  DATE
+  BOOLEAN
+  SELECT
+  TEXTAREA
+  EMAIL
+  PHONE
+}
+
+enum ContractType {
+  ACUERDO
+  CONTRATO
+}
+
+model Person {
+  id             String        @id @default(cuid())
+  fullName       String
+  dni            String        @unique
+  phone          String
+  email          String?
+  age            Int?
+  profession     String?
+  workedForState Boolean       @default(false)
+  hasDemand      Boolean       @default(false)
+  observations   String?
+
+  // Cloudinary
+  cvUrl         String?
+  cvPublicId    String?
+  photoUrl      String?
+  photoPublicId String?
+
+  // Plaza — se llena en etapa posterior
+  workPlace    String?
+  contractType ContractType?
+  contractDate DateTime?
+
+  relatedPerson RelatedPerson?
+  dynamicValues DynamicFieldValue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dni])
+  @@index([hasDemand])
+  @@index([contractType])
+  @@index([createdAt])
+  @@index([workPlace])
+}
+
+model RelatedPerson {
+  id           String  @id @default(cuid())
+  fullName     String
+  dni          String
+  phone        String
+  email        String?
+  relationship String
+
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  personId String @unique
+}
+
+model FormFieldConfig {
+  id          String    @id @default(cuid())
+  label       String
+  fieldKey    String    @unique
+  type        FieldType
+  required    Boolean   @default(false)
+  placeholder String?
+  options     String[]
+  order       Int
+  active      Boolean   @default(true)
+  isCore      Boolean   @default(false)  // campo base del modelo Person (no se puede eliminar)
+
+  values DynamicFieldValue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, order])
+  @@index([isCore])
+}
+
+model DynamicFieldValue {
+  id    String @id @default(cuid())
+  value String
+
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  personId String
+
+  field   FormFieldConfig @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  fieldId String
+
+  @@unique([personId, fieldId])
+  @@index([personId])
+}
