@@ -124,10 +124,10 @@ export function LoginForm() {
           </div>
           <div className="text-center">
             <h1 className="text-xl font-bold text-foreground tracking-tight">
-              CuadernoLaboral
+              Login
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Sistema de Registro Laboral
+              Cuadro Laboral
             </p>
           </div>
         </div>
