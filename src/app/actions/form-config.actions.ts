@@ -18,7 +18,7 @@ const CORE_FIELDS = [
   { fieldKey: 'email',          label: 'Correo electrónico',    type: 'EMAIL',    order: 40, placeholder: 'correo@ejemplo.com' },
   { fieldKey: 'age',            label: 'Edad',                  type: 'NUMBER',   order: 50, placeholder: '25' },
   { fieldKey: 'profession',     label: 'Profesión / Oficio',    type: 'TEXT',     order: 60, placeholder: 'Ej. Ingeniero, Docente…' },
-  { fieldKey: 'workedForState', label: 'Trabajó en el Estado',  type: 'BOOLEAN',  order: 70, placeholder: null },
+  { fieldKey: 'workedForState', label: 'Tiene demanda al Estado', type: 'BOOLEAN',  order: 70, placeholder: null },
   { fieldKey: 'hasDemand',      label: 'Asignación a familiar', type: 'BOOLEAN',  order: 80, placeholder: null },
   { fieldKey: 'observations',   label: 'Observaciones',         type: 'TEXTAREA', order: 90, placeholder: 'Información adicional…' },
 ] as const
