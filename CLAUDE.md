@@ -43,6 +43,9 @@ con campos dinámicos, Cloudinary, exportación y animaciones profesionales.
 6. Try/catch en cada función async — ActionResult<T> en Server Actions
 7. Validación Zod en servidor Y cliente
 8. GSAP: usar gsap.context() + cleanup en useEffect
+9. Upload de archivos: directo del navegador a Cloudinary (NO pasar por serverless)
+   — Vercel tiene límite de 4.5 MB en body de Serverless Functions
+   — Usar `/api/upload/sign` para generar firma, luego XHR directo a `api.cloudinary.com`
 
 ## GSAP — Reglas de uso
 - Instalar: gsap + @gsap/react

@@ -77,6 +77,14 @@ Sistema de registro laboral para gestión de personas, construido con Next.js, P
 - CV como enlace clicable dentro del documento
 - Demanda en color rojo/verde según estado
 
+### Upload directo a Cloudinary
+- Los archivos (CV, fotos) se suben **directamente del navegador a Cloudinary**, sin pasar por el servidor
+- Endpoint `/api/upload/sign` genera una firma criptográfica (signature + timestamp) para autorizar el upload
+- Esto evita el límite de **4.5 MB** en el body de las Serverless Functions de Vercel
+- Soporta archivos de hasta **10 MB** (validación cliente + Cloudinary)
+- Progress bar funcional con XHR directo a `api.cloudinary.com`
+- El endpoint legacy `/api/upload` se mantiene pero ya no se usa desde el frontend
+
 ### Proxy de descarga (`/api/download`)
 - Descarga archivos de Cloudinary con nombre de la persona (`NombrePersona.pdf`)
 - URLs firmadas (signed) para seguridad
@@ -151,6 +159,8 @@ En **Settings → Security** de la cuenta Cloudinary debe estar habilitado:
 ## Historial de commits
 
 ```
+e98dd76  fix: direct Cloudinary upload to bypass Vercel 4.5 MB body limit
+0f75928  feat: add conciliando mode to demanda
 109befc  fix: rename workedForState label to 'Tiene demanda al Estado'
 d52a607  feat: wire 'Tuvo cargo público previo' como trigger de sección familiar
 035ac98  feat: columnas de exportación — profesión, demanda, detalle de perfil
@@ -181,4 +191,5 @@ ebb9c22  feat: CuadernoLaboral v1.0 — sistema completo
 | `/api/export/excel` | Descarga Excel |
 | `/api/export/pdf` | Descarga PDF |
 | `/api/download` | Proxy de descarga Cloudinary |
-| `/api/upload` | Subida de archivos a Cloudinary |
+| `/api/upload` | Subida de archivos a Cloudinary (legacy) |
+| `/api/upload/sign` | Genera firma para upload directo a Cloudinary |
