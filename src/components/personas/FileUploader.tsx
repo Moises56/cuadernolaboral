@@ -27,16 +27,45 @@ interface UploadResult {
   fileName: string
 }
 
-// ─── XHR upload with progress ──────────────────────────────────────────────
-function uploadWithProgress(
-  formData: FormData,
+// ─── Signature request ─────────────────────────────────────────────────────
+interface SignResponse {
+  signature: string
+  timestamp: number
+  apiKey:    string
+  cloudName: string
+  params:    Record<string, string | number | boolean>
+}
+
+async function getUploadSignature(
+  folder: string,
+  resourceType: string,
+  fileName: string
+): Promise<SignResponse> {
+  const res = await fetch('/api/upload/sign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ folder, resourceType, fileName }),
+  })
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as Record<string, string>
+    throw new Error(err.error ?? 'Error al obtener firma de upload')
+  }
+  return res.json() as Promise<SignResponse>
+}
+
+// ─── Direct Cloudinary upload with progress ────────────────────────────────
+function uploadToCloudinary(
+  file: File,
+  sign: SignResponse,
+  resourceType: 'raw' | 'image',
   onProgress: (pct: number) => void,
   signal: AbortSignal
 ): Promise<UploadResult> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
-    xhr.open('POST', '/api/upload')
-    xhr.timeout = 30_000
+    const url = `https://api.cloudinary.com/v1_1/${sign.cloudName}/${resourceType}/upload`
+    xhr.open('POST', url)
+    xhr.timeout = 60_000
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))
@@ -44,15 +73,18 @@ function uploadWithProgress(
 
     xhr.onload = () => {
       try {
-        const data = JSON.parse(xhr.responseText) as unknown
-        const obj = data as Record<string, unknown>
+        const data = JSON.parse(xhr.responseText) as Record<string, unknown>
         if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(data as UploadResult)
+          resolve({
+            url:      data.secure_url as string,
+            publicId: data.public_id as string,
+            fileName: (data.original_filename as string) ?? file.name,
+          })
         } else {
-          reject(new Error((obj['error'] as string | undefined) ?? 'Error al subir'))
+          reject(new Error((data.error as Record<string, string>)?.message ?? 'Error al subir a Cloudinary'))
         }
       } catch {
-        reject(new Error('Respuesta inválida del servidor'))
+        reject(new Error('Respuesta inválida de Cloudinary'))
       }
     }
 
@@ -64,7 +96,17 @@ function uploadWithProgress(
       reject(new Error('Carga cancelada'))
     })
 
-    xhr.send(formData)
+    // Build FormData with signed params
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('api_key', sign.apiKey)
+    fd.append('timestamp', String(sign.timestamp))
+    fd.append('signature', sign.signature)
+    for (const [key, val] of Object.entries(sign.params)) {
+      if (key !== 'timestamp') fd.append(key, String(val))
+    }
+
+    xhr.send(fd)
   })
 }
 
@@ -121,12 +163,14 @@ export function FileUploader({
     const ctrl = new AbortController()
     abortCtrlRef.current = ctrl
 
-    const fd = new FormData()
-    fd.append('file',   file)
-    fd.append('folder', folder)
+    const resourceType = folder === 'cvs' ? 'raw' : 'image'
 
     try {
-      const result = await uploadWithProgress(fd, setProgress, ctrl.signal)
+      // 1. Get signed params from our server (lightweight, no file data)
+      const sign = await getUploadSignature(folder, resourceType, file.name)
+
+      // 2. Upload directly to Cloudinary (bypasses Vercel's 4.5 MB limit)
+      const result = await uploadToCloudinary(file, sign, resourceType, setProgress, ctrl.signal)
       setState('success')
       setProgress(100)
       setFileName(result.fileName)
