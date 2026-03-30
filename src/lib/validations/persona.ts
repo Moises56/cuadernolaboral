@@ -88,7 +88,7 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
       dynamicFields: z.record(z.string(), z.coerce.string()).optional(),
     })
     .superRefine((data, ctx) => {
-      if (!data.hasDemand) return
+      if (!data.workedForState) return
       const rp = data.relatedPerson
       if (!rp?.fullName || rp.fullName.length < 2)
         ctx.addIssue({ code: 'custom', path: ['relatedPerson', 'fullName'], message: 'Ingrese el nombre completo' })
@@ -130,7 +130,7 @@ export const personaFormSchema = personaBaseSchema
     dynamicFields: z.record(z.string(), z.coerce.string()).optional(),
   })
   .superRefine((data, ctx) => {
-    if (!data.hasDemand) return
+    if (!data.workedForState) return
     const rp = data.relatedPerson
     if (!rp?.fullName || rp.fullName.length < 2)
       ctx.addIssue({ code: 'custom', path: ['relatedPerson', 'fullName'], message: 'Ingrese el nombre completo' })

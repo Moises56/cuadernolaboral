@@ -55,7 +55,7 @@ export async function createPersonaAction(
         dni:            person.dni,
         phone:          person.phone,
         workedForState: person.workedForState,
-        hasDemand:      person.hasDemand,
+        hasDemand:      person.workedForState,
         ...(email                       && { email }),
         ...(person.age !== undefined    && { age: person.age }),
         ...(person.profession && person.profession.length > 0 && { profession: person.profession }),
@@ -64,7 +64,7 @@ export async function createPersonaAction(
         ...(person.cvPublicId           && { cvPublicId: person.cvPublicId }),
         ...(person.photoUrl             && { photoUrl: person.photoUrl }),
         ...(person.photoPublicId        && { photoPublicId: person.photoPublicId }),
-        ...(person.hasDemand && relatedPerson?.fullName && {
+        ...(person.workedForState && relatedPerson?.fullName && {
           relatedPerson: {
             create: {
               fullName:     relatedPerson.fullName!,
@@ -138,7 +138,7 @@ export async function updatePersonaAction(
           dni:            person.dni,
           phone:          person.phone,
           workedForState: person.workedForState,
-          hasDemand:      person.hasDemand,
+          hasDemand:      person.workedForState,
           email:          email ?? null,
           age:            person.age ?? null,
           profession:     person.profession ?? [],
@@ -150,7 +150,7 @@ export async function updatePersonaAction(
         },
       })
 
-      if (person.hasDemand && relatedPerson?.fullName) {
+      if (person.workedForState && relatedPerson?.fullName) {
         await tx.relatedPerson.upsert({
           where:  { personId: id },
           update: {
@@ -169,7 +169,7 @@ export async function updatePersonaAction(
             ...(relatedPerson.email && { email: relatedPerson.email }),
           },
         })
-      } else if (!person.hasDemand) {
+      } else if (!person.workedForState) {
         await tx.relatedPerson.deleteMany({ where: { personId: id } })
       }
 

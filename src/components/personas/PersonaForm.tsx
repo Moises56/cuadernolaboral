@@ -132,7 +132,8 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
     },
   })
 
-  const hasDemand    = form.watch('hasDemand')
+  // workedForState drives the familiar section; hasDemand is synced from it for DB/exports
+  const hasDemand    = form.watch('workedForState')
   // eslint-disable-next-line react-hooks/incompatible-library
   const dniValue     = form.watch('dni')
   const isSubmitting = form.formState.isSubmitting
@@ -146,6 +147,12 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
       form.setValue('age', new Date().getFullYear() - year, { shouldDirty: false, shouldValidate: false })
     }
   }, [dniValue])
+
+  // Sync hasDemand (DB field used in exports/filters) with workedForState
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    form.setValue('hasDemand', hasDemand, { shouldDirty: false, shouldValidate: false })
+  }, [hasDemand])
 
   // ─── Config maps ──────────────────────────────────────────────────────────
   const cfgMap   = useMemo(() => new Map(allFieldConfigs.map(c => [c.fieldKey, c])), [allFieldConfigs])
@@ -562,23 +569,6 @@ function CoreField({
       return (
         <FormField name="workedForState" control={form.control}
           render={({ field }) => (
-            <FormItem className="flex items-center justify-between rounded-lg border border-border p-3 sm:col-span-2">
-              <div className="space-y-0.5">
-                <FormLabel className="cursor-pointer">{label}</FormLabel>
-                <FormDescription>Tuvo cargo público previo</FormDescription>
-              </div>
-              <FormControl>
-                <Switch checked={field.value as boolean} onCheckedChange={field.onChange} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-      )
-
-    case 'hasDemand':
-      return (
-        <FormField name="hasDemand" control={form.control}
-          render={({ field }) => (
             <FormItem className="flex items-center justify-between rounded-lg border border-warning/50 bg-warning-bg/40 p-3 sm:col-span-2">
               <div className="space-y-0.5">
                 <FormLabel className="flex items-center gap-1.5 cursor-pointer">
@@ -596,6 +586,10 @@ function CoreField({
           )}
         />
       )
+
+    case 'hasDemand':
+      // hasDemand is synced from workedForState — not rendered as a separate field
+      return null
 
     case 'observations':
       return (
