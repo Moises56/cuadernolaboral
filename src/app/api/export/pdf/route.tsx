@@ -105,27 +105,27 @@ const styles = StyleSheet.create({
 
 // ─── Column layout ────────────────────────────────────────────────────────────
 const COLUMNS = [
-  { key: 'fullName',       label: 'Nombre',             flex: 17 },
-  { key: 'dni',            label: 'DNI',                flex: 11 },
-  { key: 'phone',          label: 'Teléfono',           flex: 10 },
-  { key: 'email',          label: 'Correo',             flex: 15 },
-  { key: 'nivelEducativo', label: 'Nivel Educativo',    flex: 11 },
-  { key: 'cvUrl',          label: 'CV',                 flex: 9  },
-  { key: 'detallePerfil',  label: 'Detalle del Perfil', flex: 27 },
+  { key: 'fullName',      label: 'Nombre',             flex: 18 },
+  { key: 'dni',           label: 'DNI',                flex: 12 },
+  { key: 'phone',         label: 'Teléfono',           flex: 10 },
+  { key: 'profession',    label: 'Profesión',          flex: 14 },
+  { key: 'cvUrl',         label: 'CV',                 flex: 8  },
+  { key: 'hasDemand',     label: 'Demanda',            flex: 10 },
+  { key: 'detallePerfil', label: 'Detalle del Perfil', flex: 28 },
 ] as const
 
 type ColKey = (typeof COLUMNS)[number]['key']
 
 // ─── Data type ────────────────────────────────────────────────────────────────
 interface PersonaData {
-  id:              string
-  fullName:        string
-  dni:             string
-  phone:           string
-  email:           string | null
-  cvUrl:           string | null
-  nivelEducativo:  string
-  detallePerfil:   string
+  id:            string
+  fullName:      string
+  dni:           string
+  phone:         string
+  profession:    string[]
+  hasDemand:     boolean
+  cvUrl:         string | null
+  detallePerfil: string
 }
 
 function truncate(str: string, max: number): string {
@@ -223,13 +223,15 @@ function CuadernoLaboralPDF({
                   text = p.phone
                   cellStyle = styles.cellMono
                   break
-                case 'email':
-                  text = p.email ?? '—'
+                case 'profession':
+                  text = p.profession.join(', ') || '—'
                   cellStyle = styles.cellMuted
                   break
-                case 'nivelEducativo':
-                  text = p.nivelEducativo || '—'
-                  cellStyle = styles.cellMuted
+                case 'hasDemand':
+                  text = p.hasDemand ? 'Con demanda' : 'Sin demanda'
+                  cellStyle = p.hasDemand
+                    ? { ...styles.cell, color: '#B91C1C', fontFamily: 'Helvetica-Bold' } as typeof styles.cell
+                    : { ...styles.cellMuted, color: '#16A34A' } as typeof styles.cellMuted
                   break
                 case 'detallePerfil':
                   text = p.detallePerfil ? truncate(p.detallePerfil, 120) : '—'
@@ -284,12 +286,13 @@ export async function GET(req: NextRequest) {
       prisma.person.findMany({
         where,
         select: {
-          id:       true,
-          fullName: true,
-          dni:      true,
-          phone:    true,
-          email:    true,
-          cvUrl:    true,
+          id:         true,
+          fullName:   true,
+          dni:        true,
+          phone:      true,
+          profession: true,
+          hasDemand:  true,
+          cvUrl:      true,
           dynamicValues: {
             include: { field: { select: { fieldKey: true } } },
           },
@@ -305,14 +308,14 @@ export async function GET(req: NextRequest) {
       const dyn: Record<string, string> = {}
       p.dynamicValues.forEach((dv) => { dyn[dv.field.fieldKey] = dv.value })
       return {
-        id:             p.id,
-        fullName:       p.fullName,
-        dni:            p.dni,
-        phone:          p.phone,
-        email:          p.email,
-        cvUrl:          p.cvUrl,
-        nivelEducativo: dyn['nivelEducativo'] ?? '',
-        detallePerfil:  dyn['detallePerfil']  ?? '',
+        id:            p.id,
+        fullName:      p.fullName,
+        dni:           p.dni,
+        phone:         p.phone,
+        profession:    p.profession,
+        hasDemand:     p.hasDemand,
+        cvUrl:         p.cvUrl,
+        detallePerfil: dyn['detallePerfil'] ?? '',
       }
     })
 
