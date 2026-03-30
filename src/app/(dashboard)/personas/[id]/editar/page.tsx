@@ -70,6 +70,7 @@ export default async function EditarPersonaPage({
     profession:     person.profession,
     workedForState: person.workedForState,
     hasDemand:      person.hasDemand,
+    conciliando:    person.conciliando,
     observations:   person.observations ?? '',
     cvUrl:          person.cvUrl ?? '',
     cvPublicId:     person.cvPublicId ?? '',

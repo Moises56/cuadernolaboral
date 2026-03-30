@@ -69,6 +69,7 @@ model Person {
   profession     String[]
   workedForState Boolean       @default(false)
   hasDemand      Boolean       @default(false)
+  conciliando    Boolean       @default(false)
   observations   String?
 
   // Cloudinary

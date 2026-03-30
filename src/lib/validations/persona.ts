@@ -47,6 +47,7 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
       : z.array(z.string()).optional(),
     workedForState: z.boolean().default(false),
     hasDemand:      z.boolean().default(false),
+    conciliando:    z.boolean().default(false),
     observations:   req('observations')
       ? z.string().min(1, 'Ingrese observaciones')
       : z.string().optional(),
@@ -89,6 +90,7 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
     })
     .superRefine((data, ctx) => {
       if (!data.workedForState) return
+      if (data.conciliando) return  // conciliando no requiere familiar
       const rp = data.relatedPerson
       if (!rp?.fullName || rp.fullName.length < 2)
         ctx.addIssue({ code: 'custom', path: ['relatedPerson', 'fullName'], message: 'Ingrese el nombre completo' })
@@ -109,8 +111,9 @@ export const personaBaseSchema = z.object({
   email:          z.union([z.string().email(), z.literal('')]).optional(),
   age:            z.number().int().min(0).max(120).optional(),
   profession:     z.array(z.string()).optional(),
-  workedForState: z.boolean(),
-  hasDemand:      z.boolean(),
+  workedForState: z.boolean().default(false),
+  hasDemand:      z.boolean().default(false),
+  conciliando:    z.boolean().default(false),
   observations:   z.string().optional(),
   cvUrl:          z.string().optional(),
   cvPublicId:     z.string().optional(),
@@ -131,6 +134,7 @@ export const personaFormSchema = personaBaseSchema
   })
   .superRefine((data, ctx) => {
     if (!data.workedForState) return
+    if (data.conciliando) return  // conciliando no requiere familiar
     const rp = data.relatedPerson
     if (!rp?.fullName || rp.fullName.length < 2)
       ctx.addIssue({ code: 'custom', path: ['relatedPerson', 'fullName'], message: 'Ingrese el nombre completo' })

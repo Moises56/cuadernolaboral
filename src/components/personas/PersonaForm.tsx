@@ -8,7 +8,7 @@ import { useForm, type FieldPath, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import {
-  User, Briefcase, Users, FileUp, AlertTriangle, Loader2, X, Plus,
+  User, Briefcase, Users, FileUp, AlertTriangle, Loader2, X, Plus, Scale,
 } from 'lucide-react'
 
 import { useGSAP, gsap, ANIM } from '@/lib/gsap.config'
@@ -119,6 +119,7 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
       profession:     [],
       workedForState: false,
       hasDemand:      false,
+      conciliando:    false,
       observations:   '',
       relatedPerson: {
         fullName:     '',
@@ -135,9 +136,14 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
   // workedForState drives the familiar section; hasDemand is synced from it for DB/exports
   const hasDemand    = form.watch('workedForState')
   // eslint-disable-next-line react-hooks/incompatible-library
+  const conciliando  = form.watch('conciliando') as boolean
+  // eslint-disable-next-line react-hooks/incompatible-library
   const dniValue     = form.watch('dni')
   const isSubmitting = form.formState.isSubmitting
   const relatedRef   = useRef<HTMLDivElement>(null)
+
+  // showFamiliar: solo cuando hay demanda Y no está conciliando
+  const showFamiliar = hasDemand && !conciliando
 
   // Calcula la edad automáticamente desde el DNI hondureño (grupo 2 = año)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -149,9 +155,13 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
   }, [dniValue])
 
   // Sync hasDemand (DB field used in exports/filters) with workedForState
+  // Si se desactiva la demanda, también resetea conciliando
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     form.setValue('hasDemand', hasDemand, { shouldDirty: false, shouldValidate: false })
+    if (!hasDemand) {
+      form.setValue('conciliando', false, { shouldDirty: false, shouldValidate: false })
+    }
   }, [hasDemand])
 
   // ─── Config maps ──────────────────────────────────────────────────────────
@@ -170,12 +180,13 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
   const customFields = allFieldConfigs.filter(f => !f.isCore && f.active)
 
   // ─── GSAP: sección familiar condicional ───────────────────────────────────
+  // Solo se muestra cuando hay demanda Y el modo es "Designar Familiar"
   useGSAP(() => {
     const el = relatedRef.current
     if (!el) return
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    if (hasDemand) {
+    if (showFamiliar) {
       gsap.fromTo(el,
         { height: 0, opacity: 0, y: -10 },
         { height: 'auto', opacity: 1, y: 0,
@@ -187,7 +198,7 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
         duration: reduced ? 0 : ANIM.duration.micro, ease: ANIM.ease.exit,
       })
     }
-  }, { dependencies: [hasDemand] })
+  }, { dependencies: [showFamiliar] })
 
   // ─── Submit ───────────────────────────────────────────────────────────────
   const onSubmit = async (values: PersonaFormValues) => {
@@ -274,6 +285,13 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
                       dniValue={dniValue}
                     />
                   ))}
+                  {/* Selector de resolución — aparece cuando la demanda está activa */}
+                  {hasDemand && (
+                    <DemandaResolucionSelector
+                      selected={conciliando}
+                      onChange={(v) => form.setValue('conciliando', v, { shouldDirty: true })}
+                    />
+                  )}
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -360,7 +378,7 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
           ref={relatedRef}
           className="overflow-hidden"
           style={{ height: 0, opacity: 0 }}
-          aria-hidden={!hasDemand}
+          aria-hidden={!showFamiliar}
         >
           <div className="rounded-lg border border-warning bg-card shadow-sm dark:border-warning/40">
             <div className="border-b border-warning/60 px-4 py-3 dark:border-warning/30">
@@ -576,7 +594,7 @@ function CoreField({
                   {label}
                 </FormLabel>
                 <FormDescription>
-                  El empleo se asignará al familiar indicado en la sección 3
+                  Active si la persona tiene demanda activa contra el Estado
                 </FormDescription>
               </div>
               <FormControl>
@@ -727,6 +745,69 @@ function DynamicField({
         </FormItem>
       )}
     />
+  )
+}
+
+// ─── DemandaResolucionSelector — modo de resolución de demanda ───────────────
+
+function DemandaResolucionSelector({
+  selected,
+  onChange,
+}: {
+  selected: boolean   // true = conciliando, false = designar familiar
+  onChange: (conciliando: boolean) => void
+}) {
+  return (
+    <div className="rounded-lg border border-warning/40 bg-warning-bg/20 p-3 space-y-2">
+      <p className="text-xs font-semibold text-caution-foreground">
+        ¿Cómo se está resolviendo la demanda?
+      </p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {/* Opción 1: Designar Familiar */}
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          className={[
+            'flex flex-col gap-1 rounded-md border p-2.5 text-left transition-colors',
+            !selected
+              ? 'border-caution/70 bg-warning-bg ring-1 ring-caution/30'
+              : 'border-border bg-card hover:border-caution/30 hover:bg-warning-bg/30',
+          ].join(' ')}
+        >
+          <div className="flex items-center gap-1.5">
+            <Users className={`size-3.5 ${!selected ? 'text-caution' : 'text-muted-foreground'}`} />
+            <span className={`text-xs font-semibold ${!selected ? 'text-caution-foreground' : 'text-foreground'}`}>
+              Designar Familiar
+            </span>
+          </div>
+          <span className="text-[10px] leading-snug text-muted-foreground">
+            El empleo se asignará a un familiar designado
+          </span>
+        </button>
+
+        {/* Opción 2: Conciliando */}
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          className={[
+            'flex flex-col gap-1 rounded-md border p-2.5 text-left transition-colors',
+            selected
+              ? 'border-primary/70 bg-primary/5 ring-1 ring-primary/30'
+              : 'border-border bg-card hover:border-primary/30 hover:bg-primary/5',
+          ].join(' ')}
+        >
+          <div className="flex items-center gap-1.5">
+            <Scale className={`size-3.5 ${selected ? 'text-primary' : 'text-muted-foreground'}`} />
+            <span className={`text-xs font-semibold ${selected ? 'text-primary' : 'text-foreground'}`}>
+              Conciliando
+            </span>
+          </div>
+          <span className="text-[10px] leading-snug text-muted-foreground">
+            En proceso de conciliación con el Estado
+          </span>
+        </button>
+      </div>
+    </div>
   )
 }
 

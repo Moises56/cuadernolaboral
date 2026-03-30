@@ -56,6 +56,7 @@ export async function createPersonaAction(
         phone:          person.phone,
         workedForState: person.workedForState,
         hasDemand:      person.workedForState,
+        conciliando:    person.conciliando,
         ...(email                       && { email }),
         ...(person.age !== undefined    && { age: person.age }),
         ...(person.profession && person.profession.length > 0 && { profession: person.profession }),
@@ -64,7 +65,7 @@ export async function createPersonaAction(
         ...(person.cvPublicId           && { cvPublicId: person.cvPublicId }),
         ...(person.photoUrl             && { photoUrl: person.photoUrl }),
         ...(person.photoPublicId        && { photoPublicId: person.photoPublicId }),
-        ...(person.workedForState && relatedPerson?.fullName && {
+        ...(person.workedForState && !person.conciliando && relatedPerson?.fullName && {
           relatedPerson: {
             create: {
               fullName:     relatedPerson.fullName!,
@@ -139,6 +140,7 @@ export async function updatePersonaAction(
           phone:          person.phone,
           workedForState: person.workedForState,
           hasDemand:      person.workedForState,
+          conciliando:    person.conciliando,
           email:          email ?? null,
           age:            person.age ?? null,
           profession:     person.profession ?? [],
@@ -150,7 +152,7 @@ export async function updatePersonaAction(
         },
       })
 
-      if (person.workedForState && relatedPerson?.fullName) {
+      if (person.workedForState && !person.conciliando && relatedPerson?.fullName) {
         await tx.relatedPerson.upsert({
           where:  { personId: id },
           update: {
@@ -169,7 +171,8 @@ export async function updatePersonaAction(
             ...(relatedPerson.email && { email: relatedPerson.email }),
           },
         })
-      } else if (!person.workedForState) {
+      } else if (!person.workedForState || person.conciliando) {
+        // Sin demanda o en conciliación: eliminar familiar designado si existía
         await tx.relatedPerson.deleteMany({ where: { personId: id } })
       }
 
