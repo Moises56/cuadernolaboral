@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { Briefcase } from 'lucide-react'
+import { Briefcase, UserX } from 'lucide-react'
 import { gsap, ScrollTrigger, useGSAP, ANIM } from '@/lib/gsap.config'
 
 // Silence unused import — ScrollTrigger registered via gsap.config
@@ -15,9 +15,11 @@ export interface ProfessionStat {
 export function ProfessionChart({
   data,
   total,
+  withoutProfession = 0,
 }: {
   data:  ProfessionStat[]
   total: number
+  withoutProfession?: number
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const barRefs      = useRef<(HTMLDivElement | null)[]>([])
@@ -125,9 +127,17 @@ export function ProfessionChart({
         <h3 className="text-sm font-semibold text-foreground">
           Distribución por profesión
         </h3>
-        <span className="ml-auto text-xs text-muted-foreground font-mono">
-          {data.length} profesiones
-        </span>
+        <div className="ml-auto flex items-center gap-3">
+          {withoutProfession > 0 && (
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <UserX className="w-3.5 h-3.5" aria-hidden="true" />
+              {withoutProfession} sin profesión
+            </span>
+          )}
+          <span className="text-xs text-muted-foreground font-mono">
+            {data.length} profesiones
+          </span>
+        </div>
       </div>
 
       {/* Bars */}

@@ -5,16 +5,25 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { gsap, useGSAP, ANIM } from '@/lib/gsap.config'
 
+interface ProfessionOption {
+  value: string
+  label: string
+}
+
 interface PersonaFiltersProps {
-  currentQ:       string
-  currentDemanda: string
-  currentPlaza:   string
+  currentQ:          string
+  currentDemanda:    string
+  currentPlaza:      string
+  currentProfesion:  string
+  professionOptions: ProfessionOption[]
 }
 
 export function PersonaFilters({
   currentQ,
   currentDemanda,
   currentPlaza,
+  currentProfesion,
+  professionOptions,
 }: PersonaFiltersProps) {
   const router       = useRouter()
   const searchParams = useSearchParams()
@@ -23,7 +32,7 @@ export function PersonaFilters({
 
   // Show advanced panel if any advanced filter is active
   const [showAdvanced, setShowAdvanced] = useState(
-    currentDemanda !== 'all' || currentPlaza !== 'all',
+    currentDemanda !== 'all' || currentPlaza !== 'all' || currentProfesion !== 'all',
   )
 
   // ── URL helpers ──────────────────────────────────────────────────────────
@@ -66,11 +75,12 @@ export function PersonaFilters({
   }
 
   const hasActiveFilters =
-    currentQ || currentDemanda !== 'all' || currentPlaza !== 'all'
+    currentQ || currentDemanda !== 'all' || currentPlaza !== 'all' || currentProfesion !== 'all'
 
   const activeAdvancedCount = [
-    currentDemanda !== 'all',
-    currentPlaza   !== 'all',
+    currentDemanda   !== 'all',
+    currentPlaza     !== 'all',
+    currentProfesion !== 'all',
   ].filter(Boolean).length
 
   // ── GSAP: slide-in advanced panel ────────────────────────────────────────
@@ -178,6 +188,26 @@ export function PersonaFilters({
               <option value="all">Todas</option>
               <option value="asignada">Asignada</option>
               <option value="pendiente">Pendiente</option>
+            </select>
+          </div>
+
+          {/* Profesión */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+              Profesión
+            </label>
+            <select
+              value={currentProfesion}
+              onChange={(e) => router.push(buildUrl('profesion', e.target.value))}
+              className="h-7 max-w-[220px] rounded-md border border-input bg-background px-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer truncate"
+            >
+              <option value="all">Todas</option>
+              {professionOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+              <option value="_none">Sin profesión</option>
             </select>
           </div>
         </div>

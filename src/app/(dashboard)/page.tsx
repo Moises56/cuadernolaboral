@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import { requireSession } from '@/lib/auth'
+import { mergeProfessions } from '@/lib/normalize-profession'
 import { StatsGrid } from '@/components/dashboard/StatsGrid'
 import { ProfessionChart, type ProfessionStat } from '@/components/dashboard/ProfessionChart'
 import { RecentTable, type RecentPerson } from '@/components/dashboard/RecentTable'
@@ -12,17 +13,25 @@ export const metadata: Metadata = {
 export default async function DashboardPage() {
   await requireSession()
 
-  const [totalPersons, withDemand, withPlaza, professionRaw, recentPersons] =
+  const [totalPersons, withDemand, withPlaza, professionRaw, withoutProfession, recentPersons] =
     await Promise.all([
       prisma.person.count(),
       prisma.person.count({ where: { hasDemand: true } }),
       prisma.person.count({ where: { contractType: { not: null } } }),
+      // Get ALL profession/count pairs (no limit) — merging happens in JS
       prisma.$queryRaw<{ profession: string; count: bigint }[]>`
-        SELECT unnest("profession") AS profession, COUNT(*)::bigint AS count
+        SELECT TRIM(unnest("profession")) AS profession, COUNT(*)::bigint AS count
         FROM "Person"
+        WHERE array_length("profession", 1) > 0
         GROUP BY 1
         ORDER BY count DESC
-        LIMIT 10
+      `,
+      // Count people with empty profession array
+      prisma.$queryRaw<[{ count: bigint }]>`
+        SELECT COUNT(*)::bigint AS count
+        FROM "Person"
+        WHERE "profession" = '{}'
+           OR "profession" IS NULL
       `,
       prisma.person.findMany({
         orderBy: { createdAt: 'desc' },
@@ -38,10 +47,19 @@ export default async function DashboardPage() {
       }),
     ])
 
-  const professionData: ProfessionStat[] = professionRaw.map((row) => ({
-    profession: row.profession,
-    count:      Number(row.count),
+  // Merge gender variants ("Abogado" + "Abogada" → single entry)
+  const rawRows = professionRaw.map((r) => ({
+    profession: r.profession,
+    count: Number(r.count),
   }))
+  const merged = mergeProfessions(rawRows, 10)
+
+  const professionData: ProfessionStat[] = merged.map((g) => ({
+    profession: g.display,
+    count: g.count,
+  }))
+
+  const noProfessionCount = Number(withoutProfession[0]?.count ?? 0)
 
   const persons: RecentPerson[] = recentPersons.map((p) => ({
     ...p,
@@ -65,7 +83,11 @@ export default async function DashboardPage() {
 
       {/* Profession distribution */}
       <section className="mt-6">
-        <ProfessionChart data={professionData} total={totalPersons} />
+        <ProfessionChart
+          data={professionData}
+          total={totalPersons}
+          withoutProfession={noProfessionCount}
+        />
       </section>
 
       {/* Recent persons table */}

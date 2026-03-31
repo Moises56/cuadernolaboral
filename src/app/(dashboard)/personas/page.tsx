@@ -4,6 +4,10 @@ import Link from 'next/link'
 import { Plus, FileDown, FileText } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { requireSession } from '@/lib/auth'
+import {
+  normalizeProfession,
+  buildProfessionOptions,
+} from '@/lib/normalize-profession'
 import { PersonaTable, type PersonaRow } from '@/components/personas/PersonaTable'
 import { PersonaFilters } from '@/components/personas/PersonaFilters'
 import { PersonaPagination } from '@/components/personas/PersonaPagination'
@@ -29,13 +33,34 @@ export default async function PersonasPage({
 
   const str = (v: unknown) => (typeof v === 'string' ? v : '')
 
-  const q        = str(raw.q).trim()
-  const demanda  = str(raw.demanda) || 'all'
-  const plaza    = str(raw.plaza)   || 'all'
-  const page     = Math.max(1, parseInt(str(raw.pagina) || '1', 10))
-  const orderBy  = (VALID_SORT.includes(str(raw.orderBy) as SortField)
+  const q         = str(raw.q).trim()
+  const demanda   = str(raw.demanda) || 'all'
+  const plaza     = str(raw.plaza)   || 'all'
+  const profesion = str(raw.profesion) || 'all'
+  const page      = Math.max(1, parseInt(str(raw.pagina) || '1', 10))
+  const orderBy   = (VALID_SORT.includes(str(raw.orderBy) as SortField)
     ? str(raw.orderBy) : 'createdAt') as SortField
-  const orderDir = str(raw.orderDir) === 'asc' ? ('asc' as SortDir) : ('desc' as SortDir)
+  const orderDir  = str(raw.orderDir) === 'asc' ? ('asc' as SortDir) : ('desc' as SortDir)
+
+  // ── Get all unique raw profession strings for the filter dropdown ────────
+  const allProfessionsRaw = await prisma.$queryRaw<{ profession: string }[]>`
+    SELECT DISTINCT TRIM(unnest("profession")) AS profession
+    FROM "Person"
+    WHERE array_length("profession", 1) > 0
+    ORDER BY profession
+  `
+  const allRawStrings = allProfessionsRaw.map((r) => r.profession)
+  const professionOptions = buildProfessionOptions(allRawStrings)
+
+  // ── Build profession filter: find all raw variants matching the normalized key
+  let professionVariants: string[] = []
+  if (profesion === '_none') {
+    // Special: filter people with NO profession
+  } else if (profesion !== 'all') {
+    professionVariants = allRawStrings.filter(
+      (raw) => normalizeProfession(raw) === profesion,
+    )
+  }
 
   // ── Prisma where clause ────────────────────────────────────────────────────
   const where = {
@@ -49,6 +74,11 @@ export default async function PersonasPage({
     ...(demanda === 'sin' && { hasDemand: false }),
     ...(plaza === 'asignada'  && { workPlace: { not: null } }),
     ...(plaza === 'pendiente' && { workPlace: null }),
+    // Profession filter
+    ...(profesion === '_none' && { profession: { equals: [] as string[] } }),
+    ...(professionVariants.length > 0 && {
+      profession: { hasSome: professionVariants },
+    }),
   }
 
   // ── Parallel queries — async-parallel pattern ──────────────────────────────
@@ -79,19 +109,21 @@ export default async function PersonasPage({
 
   // Compact record of non-default URL params — passed to client components
   const paramsRecord: Record<string, string> = {
-    ...(q                    && { q }),
-    ...(demanda !== 'all'    && { demanda }),
-    ...(plaza   !== 'all'    && { plaza }),
-    ...(page    > 1          && { pagina: String(page) }),
-    ...(orderBy !== 'createdAt' && { orderBy }),
-    ...(orderDir !== 'desc'  && { orderDir }),
+    ...(q                       && { q }),
+    ...(demanda   !== 'all'     && { demanda }),
+    ...(plaza     !== 'all'     && { plaza }),
+    ...(profesion !== 'all'     && { profesion }),
+    ...(page      > 1           && { pagina: String(page) }),
+    ...(orderBy   !== 'createdAt' && { orderBy }),
+    ...(orderDir  !== 'desc'    && { orderDir }),
   }
 
   // Export URLs preserve active filters
   const exportBase = new URLSearchParams({
     ...(q && { q }),
-    ...(demanda !== 'all' && { demanda }),
-    ...(plaza   !== 'all' && { plaza }),
+    ...(demanda   !== 'all' && { demanda }),
+    ...(plaza     !== 'all' && { plaza }),
+    ...(profesion !== 'all' && { profesion }),
   }).toString()
   const exportQs = exportBase ? `?${exportBase}` : ''
 
@@ -144,6 +176,8 @@ export default async function PersonasPage({
           currentQ={q}
           currentDemanda={demanda}
           currentPlaza={plaza}
+          currentProfesion={profesion}
+          professionOptions={professionOptions}
         />
       </Suspense>
 
