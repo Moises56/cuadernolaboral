@@ -59,6 +59,12 @@ enum ContractType {
   CONTRATO
 }
 
+enum PersonType {
+  JRV
+  MESA_APOYO
+  OBSERVADORES
+}
+
 model Person {
   id             String        @id @default(cuid())
   fullName       String
@@ -67,6 +73,7 @@ model Person {
   email          String?
   age            Int?
   profession     String[]
+  tipo           PersonType    @default(JRV)
   workedForState Boolean       @default(false)
   hasDemand      Boolean       @default(false)
   conciliando    Boolean       @default(false)

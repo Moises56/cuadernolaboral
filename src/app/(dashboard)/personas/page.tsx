@@ -37,6 +37,7 @@ export default async function PersonasPage({
   const demanda   = str(raw.demanda) || 'all'
   const plaza     = str(raw.plaza)   || 'all'
   const profesion = str(raw.profesion) || 'all'
+  const tipo      = str(raw.tipo) || 'all'
   const page      = Math.max(1, parseInt(str(raw.pagina) || '1', 10))
   const orderBy   = (VALID_SORT.includes(str(raw.orderBy) as SortField)
     ? str(raw.orderBy) : 'createdAt') as SortField
@@ -79,6 +80,8 @@ export default async function PersonasPage({
     ...(professionVariants.length > 0 && {
       profession: { hasSome: professionVariants },
     }),
+    // Tipo filter
+    ...(tipo !== 'all' && { tipo: tipo as 'JRV' | 'MESA_APOYO' | 'OBSERVADORES' }),
   }
 
   // ── Parallel queries — async-parallel pattern ──────────────────────────────
@@ -90,6 +93,7 @@ export default async function PersonasPage({
         fullName:     true,
         dni:          true,
         profession:   true,
+        tipo:         true,
         hasDemand:    true,
         workPlace:    true,
         contractType: true,
@@ -113,6 +117,7 @@ export default async function PersonasPage({
     ...(demanda   !== 'all'     && { demanda }),
     ...(plaza     !== 'all'     && { plaza }),
     ...(profesion !== 'all'     && { profesion }),
+    ...(tipo      !== 'all'     && { tipo }),
     ...(page      > 1           && { pagina: String(page) }),
     ...(orderBy   !== 'createdAt' && { orderBy }),
     ...(orderDir  !== 'desc'    && { orderDir }),
@@ -124,6 +129,7 @@ export default async function PersonasPage({
     ...(demanda   !== 'all' && { demanda }),
     ...(plaza     !== 'all' && { plaza }),
     ...(profesion !== 'all' && { profesion }),
+    ...(tipo      !== 'all' && { tipo }),
   }).toString()
   const exportQs = exportBase ? `?${exportBase}` : ''
 
@@ -177,6 +183,7 @@ export default async function PersonasPage({
           currentDemanda={demanda}
           currentPlaza={plaza}
           currentProfesion={profesion}
+          currentTipo={tipo}
           professionOptions={professionOptions}
         />
       </Suspense>

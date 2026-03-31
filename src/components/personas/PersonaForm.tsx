@@ -57,6 +57,7 @@ const CORE_SECTION: Record<string, 'personal' | 'laboral'> = {
   email:          'personal',
   age:            'personal',
   profession:     'personal',
+  tipo:           'laboral',
   workedForState: 'laboral',
   hasDemand:      'laboral',
   observations:   'laboral',
@@ -117,6 +118,7 @@ export function PersonaForm({ allFieldConfigs, personId, defaultValues }: Person
       phone:          '',
       email:          '',
       profession:     [],
+      tipo:           'JRV' as const,
       workedForState: false,
       hasDemand:      false,
       conciliando:    false,
@@ -582,6 +584,30 @@ function CoreField({
 
     case 'profession':
       return <ProfessionTagInput form={form} label={label} required={required} placeholder={placeholder} />
+
+    case 'tipo':
+      return (
+        <FormField name="tipo" control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{label}<RequiredMark required={required} /></FormLabel>
+              <FormControl>
+                <Select onValueChange={field.onChange} value={(field.value as string) ?? 'JRV'}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Seleccione tipo…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="JRV">JRV</SelectItem>
+                    <SelectItem value="MESA_APOYO">Mesa de Apoyo</SelectItem>
+                    <SelectItem value="OBSERVADORES">Observadores</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )
 
     case 'workedForState':
       return (

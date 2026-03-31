@@ -15,6 +15,7 @@ interface PersonaFiltersProps {
   currentDemanda:    string
   currentPlaza:      string
   currentProfesion:  string
+  currentTipo:       string
   professionOptions: ProfessionOption[]
 }
 
@@ -23,6 +24,7 @@ export function PersonaFilters({
   currentDemanda,
   currentPlaza,
   currentProfesion,
+  currentTipo,
   professionOptions,
 }: PersonaFiltersProps) {
   const router       = useRouter()
@@ -32,7 +34,7 @@ export function PersonaFilters({
 
   // Show advanced panel if any advanced filter is active
   const [showAdvanced, setShowAdvanced] = useState(
-    currentDemanda !== 'all' || currentPlaza !== 'all' || currentProfesion !== 'all',
+    currentDemanda !== 'all' || currentPlaza !== 'all' || currentProfesion !== 'all' || currentTipo !== 'all',
   )
 
   // ── URL helpers ──────────────────────────────────────────────────────────
@@ -75,12 +77,13 @@ export function PersonaFilters({
   }
 
   const hasActiveFilters =
-    currentQ || currentDemanda !== 'all' || currentPlaza !== 'all' || currentProfesion !== 'all'
+    currentQ || currentDemanda !== 'all' || currentPlaza !== 'all' || currentProfesion !== 'all' || currentTipo !== 'all'
 
   const activeAdvancedCount = [
     currentDemanda   !== 'all',
     currentPlaza     !== 'all',
     currentProfesion !== 'all',
+    currentTipo      !== 'all',
   ].filter(Boolean).length
 
   // ── GSAP: slide-in advanced panel ────────────────────────────────────────
@@ -172,6 +175,23 @@ export function PersonaFilters({
               <option value="all">Todos</option>
               <option value="con">Con demanda</option>
               <option value="sin">Sin demanda</option>
+            </select>
+          </div>
+
+          {/* Tipo */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+              Tipo
+            </label>
+            <select
+              value={currentTipo}
+              onChange={(e) => router.push(buildUrl('tipo', e.target.value))}
+              className="h-7 rounded-md border border-input bg-background px-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+            >
+              <option value="all">Todos</option>
+              <option value="JRV">JRV</option>
+              <option value="MESA_APOYO">Mesa de Apoyo</option>
+              <option value="OBSERVADORES">Observadores</option>
             </select>
           </div>
 

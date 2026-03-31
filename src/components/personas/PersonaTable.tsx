@@ -19,9 +19,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { PersonTypeLabels } from '@/lib/validations/persona'
 import { deletePersonaAction } from '@/app/actions/persona.actions'
 import { StatusBadge } from '@/components/personas/StatusBadge'
 import { AssignPlazaDialog } from '@/components/personas/AssignPlazaDialog'
+
+// ─── Tipo badge ─────────────────────────────────────────────────────────────
+
+const TIPO_COLORS: Record<string, string> = {
+  JRV:          'bg-primary/10 text-primary border-primary/20',
+  MESA_APOYO:   'bg-teal-50 text-teal-700 border-teal-300 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800',
+  OBSERVADORES: 'bg-caution-bg text-caution-foreground border-caution/30',
+}
+
+function TipoBadge({ tipo }: { tipo: string }) {
+  const label = PersonTypeLabels[tipo as keyof typeof PersonTypeLabels] ?? tipo
+  const colors = TIPO_COLORS[tipo] ?? 'bg-secondary text-muted-foreground border-border'
+  return (
+    <Badge className={`${colors} text-[0.7rem] font-medium px-2 py-0.5 rounded-md border`}>
+      {label}
+    </Badge>
+  )
+}
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -30,6 +49,7 @@ export interface PersonaRow {
   fullName:     string
   dni:          string
   profession:   string[]
+  tipo:         'JRV' | 'MESA_APOYO' | 'OBSERVADORES'
   hasDemand:    boolean
   workPlace:    string | null
   contractType: 'ACUERDO' | 'CONTRATO' | null
@@ -235,6 +255,9 @@ export function PersonaTable({
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground whitespace-nowrap">
                   Profesión / Oficio
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground whitespace-nowrap">
+                  Tipo
+                </th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
                   Demanda
                 </th>
@@ -276,6 +299,11 @@ export function PersonaTable({
                       ? persona.profession.join(', ')
                       : <span className="text-muted-foreground/30">—</span>
                     }
+                  </td>
+
+                  {/* Tipo */}
+                  <td className="px-4 py-3">
+                    <TipoBadge tipo={persona.tipo} />
                   </td>
 
                   {/* Demanda */}

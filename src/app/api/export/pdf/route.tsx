@@ -105,10 +105,11 @@ const styles = StyleSheet.create({
 
 // ─── Column layout ────────────────────────────────────────────────────────────
 const COLUMNS = [
-  { key: 'fullName',      label: 'Nombre',             flex: 18 },
+  { key: 'fullName',      label: 'Nombre',             flex: 16 },
+  { key: 'tipo',          label: 'Tipo',               flex: 8  },
   { key: 'dni',           label: 'DNI',                flex: 12 },
   { key: 'phone',         label: 'Teléfono',           flex: 10 },
-  { key: 'profession',    label: 'Profesión',          flex: 14 },
+  { key: 'profession',    label: 'Profesión',          flex: 12 },
   { key: 'cvUrl',         label: 'CV',                 flex: 8  },
   { key: 'hasDemand',     label: 'Demanda',            flex: 10 },
   { key: 'detallePerfil', label: 'Detalle del Perfil', flex: 28 },
@@ -120,6 +121,7 @@ type ColKey = (typeof COLUMNS)[number]['key']
 interface PersonaData {
   id:            string
   fullName:      string
+  tipo:          string
   dni:           string
   phone:         string
   profession:    string[]
@@ -215,6 +217,17 @@ function CuadernoLaboralPDF({
                   text = p.fullName
                   cellStyle = styles.cellBold
                   break
+                case 'tipo': {
+                  const tipoLabels: Record<string, string> = {
+                    JRV: 'JRV', MESA_APOYO: 'Mesa de Apoyo', OBSERVADORES: 'Observadores',
+                  }
+                  const tipoTextColor: Record<string, string> = {
+                    JRV: '#6B3FA0', MESA_APOYO: '#0F766E', OBSERVADORES: '#9A3412',
+                  }
+                  text = tipoLabels[p.tipo] ?? p.tipo
+                  cellStyle = { ...styles.cell, color: tipoTextColor[p.tipo] ?? '#6B7280', fontFamily: 'Helvetica-Bold' } as typeof styles.cell
+                  break
+                }
                 case 'dni':
                   text = p.dni
                   cellStyle = styles.cellMono
@@ -268,6 +281,7 @@ export async function GET(req: NextRequest) {
     const q       = (sp.get('q')     ?? '').trim()
     const demanda = sp.get('demanda') ?? 'all'
     const plaza   = sp.get('plaza')   ?? 'all'
+    const tipo    = sp.get('tipo')    ?? 'all'
 
     const where = {
       ...(q && {
@@ -280,6 +294,7 @@ export async function GET(req: NextRequest) {
       ...(demanda === 'sin' && { hasDemand: false }),
       ...(plaza === 'asignada'  && { workPlace: { not: null } }),
       ...(plaza === 'pendiente' && { workPlace: null }),
+      ...(tipo !== 'all' && { tipo: tipo as 'JRV' | 'MESA_APOYO' | 'OBSERVADORES' }),
     }
 
     const [rows, total, conDemanda, conPlaza] = await Promise.all([
@@ -288,6 +303,7 @@ export async function GET(req: NextRequest) {
         select: {
           id:         true,
           fullName:   true,
+          tipo:       true,
           dni:        true,
           phone:      true,
           profession: true,
@@ -310,6 +326,7 @@ export async function GET(req: NextRequest) {
       return {
         id:            p.id,
         fullName:      p.fullName,
+        tipo:          p.tipo,
         dni:           p.dni,
         phone:         p.phone,
         profession:    p.profession,

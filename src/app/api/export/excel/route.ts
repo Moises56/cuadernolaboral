@@ -34,6 +34,7 @@ const C = {
 const COLS = [
   { key: 'rowNum',        header: 'N°',                 width: 5,  center: true  },
   { key: 'fullName',      header: 'Nombre Completo',    width: 28, center: false },
+  { key: 'tipo',          header: 'Tipo',               width: 14, center: true  },
   { key: 'dni',           header: 'DNI',                width: 17, center: true  },
   { key: 'phone',         header: 'Teléfono',           width: 14, center: true  },
   { key: 'profession',    header: 'Profesión / Oficio', width: 24, center: false },
@@ -59,6 +60,7 @@ export async function GET(req: NextRequest) {
     const q       = (sp.get('q')       ?? '').trim()
     const demanda = sp.get('demanda')   ?? 'all'
     const plaza   = sp.get('plaza')     ?? 'all'
+    const tipo    = sp.get('tipo')      ?? 'all'
 
     const where = {
       ...(q && {
@@ -71,12 +73,14 @@ export async function GET(req: NextRequest) {
       ...(demanda === 'sin' && { hasDemand: false }),
       ...(plaza === 'asignada'  && { workPlace: { not: null } }),
       ...(plaza === 'pendiente' && { workPlace: null }),
+      ...(tipo !== 'all' && { tipo: tipo as 'JRV' | 'MESA_APOYO' | 'OBSERVADORES' }),
     }
 
     const personas = await prisma.person.findMany({
       where,
       select: {
         fullName:  true,
+        tipo:      true,
         dni:       true,
         phone:     true,
         profession: true,
@@ -205,6 +209,22 @@ export async function GET(req: NextRequest) {
             cell.font   = { name: 'Calibri', bold: true, size: 10, color: { argb: C.nameColor } }
             cell.border = { ...cell.border, left: { style: 'medium', color: { argb: C.subtitleBg } } }
             break
+
+          case 'tipo': {
+            const tipoLabels: Record<string, string> = {
+              JRV: 'JRV', MESA_APOYO: 'Mesa de Apoyo', OBSERVADORES: 'Observadores',
+            }
+            const tipoColors: Record<string, { fg: string; text: string }> = {
+              JRV:          { fg: 'FFE8DEF8', text: 'FF6B3FA0' },
+              MESA_APOYO:   { fg: 'FFCCFBF1', text: 'FF0F766E' },
+              OBSERVADORES: { fg: 'FFFFF7ED', text: 'FF9A3412' },
+            }
+            const tc = tipoColors[p.tipo] ?? { fg: 'FFF3F4F6', text: 'FF6B7280' }
+            cell.value = tipoLabels[p.tipo] ?? p.tipo
+            cell.font  = { name: 'Calibri', bold: true, size: 9, color: { argb: tc.text } }
+            cell.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: tc.fg } }
+            break
+          }
 
           case 'dni':
             cell.value  = p.dni
