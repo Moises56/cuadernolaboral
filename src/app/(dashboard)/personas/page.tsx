@@ -123,13 +123,15 @@ export default async function PersonasPage({
     ...(orderDir  !== 'desc'    && { orderDir }),
   }
 
-  // Export URLs preserve active filters
+  // Export URLs preserve active filters + current sort order
   const exportBase = new URLSearchParams({
     ...(q && { q }),
     ...(demanda   !== 'all' && { demanda }),
     ...(plaza     !== 'all' && { plaza }),
     ...(profesion !== 'all' && { profesion }),
     ...(tipo      !== 'all' && { tipo }),
+    ...(orderBy   !== 'createdAt' && { orderBy }),
+    ...(orderDir  !== 'desc'     && { orderDir }),
   }).toString()
   const exportQs = exportBase ? `?${exportBase}` : ''
 
@@ -184,6 +186,8 @@ export default async function PersonasPage({
           currentPlaza={plaza}
           currentProfesion={profesion}
           currentTipo={tipo}
+          currentOrderBy={orderBy}
+          currentOrderDir={orderDir}
           professionOptions={professionOptions}
         />
       </Suspense>

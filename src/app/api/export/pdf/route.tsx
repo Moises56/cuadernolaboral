@@ -283,6 +283,14 @@ export async function GET(req: NextRequest) {
     const plaza   = sp.get('plaza')   ?? 'all'
     const tipo    = sp.get('tipo')    ?? 'all'
 
+    // Sort params — validated to prevent injection
+    const VALID_SORT = ['fullName', 'dni', 'createdAt'] as const
+    const rawOrderBy  = sp.get('orderBy') ?? 'createdAt'
+    const rawOrderDir = sp.get('orderDir') ?? 'desc'
+    const sortField = VALID_SORT.includes(rawOrderBy as typeof VALID_SORT[number])
+      ? rawOrderBy : 'createdAt'
+    const sortDir = rawOrderDir === 'asc' ? 'asc' : 'desc'
+
     const where = {
       ...(q && {
         OR: [
@@ -313,7 +321,7 @@ export async function GET(req: NextRequest) {
             include: { field: { select: { fieldKey: true } } },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [sortField]: sortDir },
       }),
       prisma.person.count({ where }),
       prisma.person.count({ where: { hasDemand: true } }),

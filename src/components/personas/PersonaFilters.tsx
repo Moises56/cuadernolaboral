@@ -10,12 +10,23 @@ interface ProfessionOption {
   label: string
 }
 
+const SORT_OPTIONS = [
+  { value: 'createdAt:desc', label: 'Más reciente primero' },
+  { value: 'createdAt:asc',  label: 'Más antiguo primero' },
+  { value: 'fullName:asc',   label: 'Nombre A → Z' },
+  { value: 'fullName:desc',  label: 'Nombre Z → A' },
+  { value: 'dni:asc',        label: 'DNI ascendente' },
+  { value: 'dni:desc',       label: 'DNI descendente' },
+] as const
+
 interface PersonaFiltersProps {
   currentQ:          string
   currentDemanda:    string
   currentPlaza:      string
   currentProfesion:  string
   currentTipo:       string
+  currentOrderBy:    string
+  currentOrderDir:   string
   professionOptions: ProfessionOption[]
 }
 
@@ -25,6 +36,8 @@ export function PersonaFilters({
   currentPlaza,
   currentProfesion,
   currentTipo,
+  currentOrderBy,
+  currentOrderDir,
   professionOptions,
 }: PersonaFiltersProps) {
   const router       = useRouter()
@@ -228,6 +241,37 @@ export function PersonaFilters({
                 </option>
               ))}
               <option value="_none">Sin profesión</option>
+            </select>
+          </div>
+
+          {/* Ordenar por */}
+          <div className="flex items-center gap-2 ml-auto">
+            <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+              Ordenar
+            </label>
+            <select
+              value={`${currentOrderBy}:${currentOrderDir}`}
+              onChange={(e) => {
+                const [field = 'createdAt', dir = 'desc'] = e.target.value.split(':')
+                const params = new URLSearchParams(searchParams.toString())
+                if (field === 'createdAt' && dir === 'desc') {
+                  params.delete('orderBy')
+                  params.delete('orderDir')
+                } else {
+                  params.set('orderBy', field)
+                  params.set('orderDir', dir)
+                }
+                params.delete('pagina')
+                const qs = params.toString()
+                router.push(`/personas${qs ? `?${qs}` : ''}`)
+              }}
+              className="h-7 rounded-md border border-input bg-background px-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
