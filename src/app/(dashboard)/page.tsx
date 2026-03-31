@@ -61,9 +61,18 @@ export default async function DashboardPage() {
 
   const noProfessionCount = Number(withoutProfession[0]?.count ?? 0)
 
+  // Format dates on the server to avoid hydration mismatch (timezone diff)
   const persons: RecentPerson[] = recentPersons.map((p) => ({
-    ...p,
+    id:           p.id,
+    fullName:     p.fullName,
+    dni:          p.dni,
+    hasDemand:    p.hasDemand,
     contractType: p.contractType ?? null,
+    createdAt:    p.createdAt.toLocaleDateString('es-HN', {
+      day:   '2-digit',
+      month: '2-digit',
+      year:  'numeric',
+    }),
   }))
 
   return (

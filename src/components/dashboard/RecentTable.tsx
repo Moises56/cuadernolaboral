@@ -14,7 +14,7 @@ export interface RecentPerson {
   dni: string
   hasDemand: boolean
   contractType: string | null
-  createdAt: Date
+  createdAt: string // pre-formatted on server to avoid hydration mismatch
 }
 
 export function RecentTable({ persons }: { persons: RecentPerson[] }) {
@@ -118,11 +118,7 @@ export function RecentTable({ persons }: { persons: RecentPerson[] }) {
                   {person.contractType ?? '—'}
                 </td>
                 <td className="px-5 py-3.5 text-muted-foreground whitespace-nowrap font-mono text-xs">
-                  {new Date(person.createdAt).toLocaleDateString('es-AR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                  })}
+                  {person.createdAt}
                 </td>
               </tr>
             ))}

@@ -17,9 +17,16 @@ export function normalizeProfession(raw: string): string {
   return words.join(' ')
 }
 
-/** Capitalize first letter of each word for display. */
+/**
+ * Capitalize first letter of each word for display.
+ * Uses split/join instead of \b\w regex to handle accented chars
+ * (é, á, ñ, etc.) which break JS word-boundary matching.
+ */
 export function capitalize(str: string): string {
-  return str.replace(/\b\w/g, (c) => c.toUpperCase())
+  return str
+    .split(/\s+/)
+    .map((w) => (w.length > 0 ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+    .join(' ')
 }
 
 export interface ProfessionGroup {
