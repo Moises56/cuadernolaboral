@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import { requireSession } from '@/lib/auth'
-import { StatsGrid, type StatItem } from '@/components/dashboard/StatsGrid'
+import { StatsGrid } from '@/components/dashboard/StatsGrid'
+import { ProfessionChart, type ProfessionStat } from '@/components/dashboard/ProfessionChart'
 import { RecentTable, type RecentPerson } from '@/components/dashboard/RecentTable'
 
 export const metadata: Metadata = {
@@ -10,11 +11,19 @@ export const metadata: Metadata = {
 
 export default async function DashboardPage() {
   await requireSession()
-  const [totalPersons, withDemand, withPlaza, recentPersons] =
+
+  const [totalPersons, withDemand, withPlaza, professionRaw, recentPersons] =
     await Promise.all([
       prisma.person.count(),
       prisma.person.count({ where: { hasDemand: true } }),
       prisma.person.count({ where: { contractType: { not: null } } }),
+      prisma.$queryRaw<{ profession: string; count: bigint }[]>`
+        SELECT unnest("profession") AS profession, COUNT(*)::bigint AS count
+        FROM "Person"
+        GROUP BY 1
+        ORDER BY count DESC
+        LIMIT 10
+      `,
       prisma.person.findMany({
         orderBy: { createdAt: 'desc' },
         take: 5,
@@ -29,32 +38,10 @@ export default async function DashboardPage() {
       }),
     ])
 
-  const stats: StatItem[] = [
-    {
-      label: 'Total registradas',
-      value: totalPersons,
-      icon:  'Users',
-      color: 'primary',
-    },
-    {
-      label: 'Con demanda',
-      value: withDemand,
-      icon:  'AlertTriangle',
-      color: 'accent',
-    },
-    {
-      label: 'Con plaza asignada',
-      value: withPlaza,
-      icon:  'Building2',
-      color: 'green',
-    },
-    {
-      label: 'Sin plaza aún',
-      value: totalPersons - withPlaza,
-      icon:  'Clock',
-      color: 'muted',
-    },
-  ]
+  const professionData: ProfessionStat[] = professionRaw.map((row) => ({
+    profession: row.profession,
+    count:      Number(row.count),
+  }))
 
   const persons: RecentPerson[] = recentPersons.map((p) => ({
     ...p,
@@ -74,10 +61,15 @@ export default async function DashboardPage() {
       </header>
 
       {/* Stats cards */}
-      <StatsGrid stats={stats} />
+      <StatsGrid stats={{ total: totalPersons, withDemand, withPlaza }} />
+
+      {/* Profession distribution */}
+      <section className="mt-6">
+        <ProfessionChart data={professionData} total={totalPersons} />
+      </section>
 
       {/* Recent persons table */}
-      <section className="mt-8">
+      <section className="mt-6">
         <h2 className="text-[1.05rem] font-semibold text-foreground mb-3">
           Últimas personas registradas
         </h2>
