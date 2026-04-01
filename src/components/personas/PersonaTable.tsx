@@ -27,9 +27,11 @@ import { AssignPlazaDialog } from '@/components/personas/AssignPlazaDialog'
 // ─── Tipo badge ─────────────────────────────────────────────────────────────
 
 const TIPO_COLORS: Record<string, string> = {
-  JRV:          'bg-primary/10 text-primary border-primary/20',
-  MESA_APOYO:   'bg-teal-50 text-teal-700 border-teal-300 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800',
-  OBSERVADORES: 'bg-caution-bg text-caution-foreground border-caution/30',
+  JRV:            'bg-primary/10 text-primary border-primary/20',
+  MESA_APOYO:     'bg-teal-50 text-teal-700 border-teal-300 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800',
+  OBSERVADORES:   'bg-caution-bg text-caution-foreground border-caution/30',
+  ROBLES:         'bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
+  AMOR_VIVIENTE:  'bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800',
 }
 
 function TipoBadge({ tipo }: { tipo: string }) {
@@ -49,7 +51,7 @@ export interface PersonaRow {
   fullName:     string
   dni:          string
   profession:   string[]
-  tipo:         'JRV' | 'MESA_APOYO' | 'OBSERVADORES'
+  tipo:         'JRV' | 'MESA_APOYO' | 'OBSERVADORES' | 'ROBLES' | 'AMOR_VIVIENTE'
   hasDemand:    boolean
   workPlace:    string | null
   contractType: 'ACUERDO' | 'CONTRATO' | null

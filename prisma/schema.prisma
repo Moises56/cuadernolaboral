@@ -63,6 +63,8 @@ enum PersonType {
   JRV
   MESA_APOYO
   OBSERVADORES
+  ROBLES
+  AMOR_VIVIENTE
 }
 
 model Person {

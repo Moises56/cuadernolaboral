@@ -600,6 +600,8 @@ function CoreField({
                     <SelectItem value="JRV">JRV</SelectItem>
                     <SelectItem value="MESA_APOYO">Mesa de Apoyo</SelectItem>
                     <SelectItem value="OBSERVADORES">Observadores</SelectItem>
+                    <SelectItem value="ROBLES">Robles</SelectItem>
+                    <SelectItem value="AMOR_VIVIENTE">Amor Viviente</SelectItem>
                   </SelectContent>
                 </Select>
               </FormControl>

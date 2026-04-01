@@ -81,7 +81,7 @@ export default async function PersonasPage({
       profession: { hasSome: professionVariants },
     }),
     // Tipo filter
-    ...(tipo !== 'all' && { tipo: tipo as 'JRV' | 'MESA_APOYO' | 'OBSERVADORES' }),
+    ...(tipo !== 'all' && { tipo: tipo as 'JRV' | 'MESA_APOYO' | 'OBSERVADORES' | 'ROBLES' | 'AMOR_VIVIENTE' }),
   }
 
   // ── Parallel queries — async-parallel pattern ──────────────────────────────

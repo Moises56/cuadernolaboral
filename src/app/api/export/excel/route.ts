@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
       ...(demanda === 'sin' && { hasDemand: false }),
       ...(plaza === 'asignada'  && { workPlace: { not: null } }),
       ...(plaza === 'pendiente' && { workPlace: null }),
-      ...(tipo !== 'all' && { tipo: tipo as 'JRV' | 'MESA_APOYO' | 'OBSERVADORES' }),
+      ...(tipo !== 'all' && { tipo: tipo as 'JRV' | 'MESA_APOYO' | 'OBSERVADORES' | 'ROBLES' | 'AMOR_VIVIENTE' }),
     }
 
     const personas = await prisma.person.findMany({
@@ -221,11 +221,14 @@ export async function GET(req: NextRequest) {
           case 'tipo': {
             const tipoLabels: Record<string, string> = {
               JRV: 'JRV', MESA_APOYO: 'Mesa de Apoyo', OBSERVADORES: 'Observadores',
+              ROBLES: 'Robles', AMOR_VIVIENTE: 'Amor Viviente',
             }
             const tipoColors: Record<string, { fg: string; text: string }> = {
-              JRV:          { fg: 'FFE8DEF8', text: 'FF6B3FA0' },
-              MESA_APOYO:   { fg: 'FFCCFBF1', text: 'FF0F766E' },
-              OBSERVADORES: { fg: 'FFFFF7ED', text: 'FF9A3412' },
+              JRV:            { fg: 'FFE8DEF8', text: 'FF6B3FA0' },
+              MESA_APOYO:     { fg: 'FFCCFBF1', text: 'FF0F766E' },
+              OBSERVADORES:   { fg: 'FFFFF7ED', text: 'FF9A3412' },
+              ROBLES:         { fg: 'FFD1FAE5', text: 'FF047857' },
+              AMOR_VIVIENTE:  { fg: 'FFFFE4E6', text: 'FFBE123C' },
             }
             const tc = tipoColors[p.tipo] ?? { fg: 'FFF3F4F6', text: 'FF6B7280' }
             cell.value = tipoLabels[p.tipo] ?? p.tipo

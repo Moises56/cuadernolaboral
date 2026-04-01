@@ -205,6 +205,8 @@ export function PersonaFilters({
               <option value="JRV">JRV</option>
               <option value="MESA_APOYO">Mesa de Apoyo</option>
               <option value="OBSERVADORES">Observadores</option>
+              <option value="ROBLES">Robles</option>
+              <option value="AMOR_VIVIENTE">Amor Viviente</option>
             </select>
           </div>
 

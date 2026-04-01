@@ -8,12 +8,14 @@ export const ContractTypeLabels = {
 } as const satisfies Record<string, string>
 
 export const PersonTypeLabels = {
-  JRV:          'JRV',
-  MESA_APOYO:   'Mesa de Apoyo',
-  OBSERVADORES: 'Observadores',
+  JRV:            'JRV',
+  MESA_APOYO:     'Mesa de Apoyo',
+  OBSERVADORES:   'Observadores',
+  ROBLES:         'Robles',
+  AMOR_VIVIENTE:  'Amor Viviente',
 } as const satisfies Record<string, string>
 
-export const PERSON_TYPES = ['JRV', 'MESA_APOYO', 'OBSERVADORES'] as const
+export const PERSON_TYPES = ['JRV', 'MESA_APOYO', 'OBSERVADORES', 'ROBLES', 'AMOR_VIVIENTE'] as const
 
 // ─── DNI hondureño: XXXX-YYYY-NNNNNN (con guiones, ej: 0801-1995-033990) ────
 const DNI_REGEX = /^\d{4}-\d{4}-\d{6}$/
@@ -53,7 +55,7 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
     profession: req('profession')
       ? z.array(z.string().min(1)).min(1, 'Ingrese al menos una profesión u oficio')
       : z.array(z.string()).optional(),
-    tipo:           z.enum(['JRV', 'MESA_APOYO', 'OBSERVADORES']).default('JRV'),
+    tipo:           z.enum(['JRV', 'MESA_APOYO', 'OBSERVADORES', 'ROBLES', 'AMOR_VIVIENTE']).default('JRV'),
     workedForState: z.boolean().default(false),
     hasDemand:      z.boolean().default(false),
     conciliando:    z.boolean().default(false),
@@ -120,7 +122,7 @@ export const personaBaseSchema = z.object({
   email:          z.union([z.string().email(), z.literal('')]).optional(),
   age:            z.number().int().min(0).max(120).optional(),
   profession:     z.array(z.string()).optional(),
-  tipo:           z.enum(['JRV', 'MESA_APOYO', 'OBSERVADORES']).default('JRV'),
+  tipo:           z.enum(['JRV', 'MESA_APOYO', 'OBSERVADORES', 'ROBLES', 'AMOR_VIVIENTE']).default('JRV'),
   workedForState: z.boolean().default(false),
   hasDemand:      z.boolean().default(false),
   conciliando:    z.boolean().default(false),

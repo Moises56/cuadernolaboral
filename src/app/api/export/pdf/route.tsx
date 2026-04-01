@@ -220,9 +220,11 @@ function CuadernoLaboralPDF({
                 case 'tipo': {
                   const tipoLabels: Record<string, string> = {
                     JRV: 'JRV', MESA_APOYO: 'Mesa de Apoyo', OBSERVADORES: 'Observadores',
+                    ROBLES: 'Robles', AMOR_VIVIENTE: 'Amor Viviente',
                   }
                   const tipoTextColor: Record<string, string> = {
                     JRV: '#6B3FA0', MESA_APOYO: '#0F766E', OBSERVADORES: '#9A3412',
+                    ROBLES: '#047857', AMOR_VIVIENTE: '#BE123C',
                   }
                   text = tipoLabels[p.tipo] ?? p.tipo
                   cellStyle = { ...styles.cell, color: tipoTextColor[p.tipo] ?? '#6B7280', fontFamily: 'Helvetica-Bold' } as typeof styles.cell
@@ -302,7 +304,7 @@ export async function GET(req: NextRequest) {
       ...(demanda === 'sin' && { hasDemand: false }),
       ...(plaza === 'asignada'  && { workPlace: { not: null } }),
       ...(plaza === 'pendiente' && { workPlace: null }),
-      ...(tipo !== 'all' && { tipo: tipo as 'JRV' | 'MESA_APOYO' | 'OBSERVADORES' }),
+      ...(tipo !== 'all' && { tipo: tipo as 'JRV' | 'MESA_APOYO' | 'OBSERVADORES' | 'ROBLES' | 'AMOR_VIVIENTE' }),
     }
 
     const [rows, total, conDemanda, conPlaza] = await Promise.all([
