@@ -103,6 +103,67 @@ function PersonAvatar({
   )
 }
 
+// ─── Reusable actions menu (shared by avatar trigger + 3-dots trigger) ──────
+
+interface PersonaActions {
+  onView:   () => void
+  onEdit:   () => void
+  onAssign: () => void
+  onDelete: () => void
+}
+
+function PersonaActionsMenu({
+  triggerClassName,
+  ariaLabel,
+  children,
+  actions,
+}: {
+  triggerClassName: string
+  ariaLabel:        string
+  children:         React.ReactNode
+  actions:          PersonaActions
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className={triggerClassName} aria-label={ariaLabel}>
+        {children}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuItem
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={actions.onView}
+        >
+          <Eye className="size-3.5 text-muted-foreground" />
+          Ver detalle
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={actions.onEdit}
+        >
+          <Pencil className="size-3.5 text-muted-foreground" />
+          Editar
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={actions.onAssign}
+        >
+          <Building2 className="size-3.5 text-muted-foreground" />
+          Asignar plaza
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          variant="destructive"
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={actions.onDelete}
+        >
+          <Trash2 className="size-3.5" />
+          Eliminar
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 // ─── Sortable header ─────────────────────────────────────────────────────────
 
 function SortableHeader({
@@ -272,17 +333,40 @@ export function PersonaTable({
             </thead>
 
             <tbody>
-              {personas.map((persona) => (
+              {personas.map((persona) => {
+                const actions: PersonaActions | null = isAdmin
+                  ? {
+                      onView:   () => router.push(`/personas/${persona.id}`),
+                      onEdit:   () => router.push(`/personas/${persona.id}/editar`),
+                      onAssign: () => setDialogPersona(persona),
+                      onDelete: () => handleDelete(persona.id, persona.fullName),
+                    }
+                  : null
+
+                return (
                 <tr
                   key={persona.id}
                   className="border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors"
                 >
-                  {/* Avatar */}
+                  {/* Avatar — para admin actúa como trigger del menú de acciones */}
                   <td className="px-4 py-3 w-[52px]">
-                    <PersonAvatar
-                      photoUrl={persona.photoUrl}
-                      fullName={persona.fullName}
-                    />
+                    {actions ? (
+                      <PersonaActionsMenu
+                        triggerClassName="block rounded-full p-0 border-0 bg-transparent cursor-pointer transition-all hover:scale-105 hover:ring-2 hover:ring-primary/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                        ariaLabel={`Abrir acciones de ${persona.fullName}`}
+                        actions={actions}
+                      >
+                        <PersonAvatar
+                          photoUrl={persona.photoUrl}
+                          fullName={persona.fullName}
+                        />
+                      </PersonaActionsMenu>
+                    ) : (
+                      <PersonAvatar
+                        photoUrl={persona.photoUrl}
+                        fullName={persona.fullName}
+                      />
+                    )}
                   </td>
 
                   {/* Nombre + DNI */}
@@ -333,49 +417,16 @@ export function PersonaTable({
                     />
                   </td>
 
-                  {/* Acciones */}
+                  {/* Acciones (3 puntitos) */}
                   <td className="px-4 py-3 w-[52px]">
-                    {isAdmin ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                          aria-label={`Acciones para ${persona.fullName}`}
-                        >
-                          <MoreHorizontal className="size-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={() => router.push(`/personas/${persona.id}`)}
-                          >
-                            <Eye className="size-3.5 text-muted-foreground" />
-                            Ver detalle
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={() => router.push(`/personas/${persona.id}/editar`)}
-                          >
-                            <Pencil className="size-3.5 text-muted-foreground" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={() => setDialogPersona(persona)}
-                          >
-                            <Building2 className="size-3.5 text-muted-foreground" />
-                            Asignar plaza
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            variant="destructive"
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={() => handleDelete(persona.id, persona.fullName)}
-                          >
-                            <Trash2 className="size-3.5" />
-                            Eliminar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    {actions ? (
+                      <PersonaActionsMenu
+                        triggerClassName="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                        ariaLabel={`Acciones para ${persona.fullName}`}
+                        actions={actions}
+                      >
+                        <MoreHorizontal className="size-4" />
+                      </PersonaActionsMenu>
                     ) : (
                       <Link
                         href={`/personas/${persona.id}`}
@@ -387,7 +438,8 @@ export function PersonaTable({
                     )}
                   </td>
                 </tr>
-              ))}
+              )
+              })}
             </tbody>
           </table>
         </div>
