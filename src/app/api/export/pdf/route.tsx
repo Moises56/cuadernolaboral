@@ -286,11 +286,12 @@ export async function GET(req: NextRequest) {
     const tipo    = sp.get('tipo')    ?? 'all'
 
     // Sort params — validated to prevent injection
+    // Default: fullName asc — la export es un snapshot oficial, A→Z es lo esperado
     const VALID_SORT = ['fullName', 'dni', 'createdAt'] as const
-    const rawOrderBy  = sp.get('orderBy') ?? 'createdAt'
-    const rawOrderDir = sp.get('orderDir') ?? 'desc'
+    const rawOrderBy  = sp.get('orderBy') ?? 'fullName'
+    const rawOrderDir = sp.get('orderDir') ?? 'asc'
     const sortField = VALID_SORT.includes(rawOrderBy as typeof VALID_SORT[number])
-      ? rawOrderBy : 'createdAt'
+      ? rawOrderBy : 'fullName'
     const sortDir = rawOrderDir === 'asc' ? 'asc' : 'desc'
 
     const where = {
@@ -329,6 +330,20 @@ export async function GET(req: NextRequest) {
       prisma.person.count({ where: { hasDemand: true } }),
       prisma.person.count({ where: { workPlace: { not: null } } }),
     ])
+
+    // Spanish-aware sort para fullName: maneja tildes (á,é,í,ó,ú) y ñ
+    // que la collation por defecto de Postgres/Neon ordena incorrectamente.
+    if (sortField === 'fullName') {
+      const collator = new Intl.Collator('es', {
+        sensitivity:       'base',
+        ignorePunctuation: true,
+      })
+      rows.sort((a, b) =>
+        sortDir === 'asc'
+          ? collator.compare(a.fullName, b.fullName)
+          : collator.compare(b.fullName, a.fullName),
+      )
+    }
 
     const personas: PersonaData[] = rows.map((p) => {
       const dyn: Record<string, string> = {}
