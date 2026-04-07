@@ -123,15 +123,18 @@ export default async function PersonasPage({
     ...(orderDir  !== 'desc'    && { orderDir }),
   }
 
-  // Export URLs preserve active filters + current sort order
+  // Export URLs preserve active filters + current sort order.
+  // orderBy/orderDir SIEMPRE se incluyen (incluso en el default) para que la
+  // ruta de export NO caiga en su propio default — así el orden visible en la
+  // tabla siempre se respeta en el archivo exportado, sin importar cuál sea.
   const exportBase = new URLSearchParams({
     ...(q && { q }),
     ...(demanda   !== 'all' && { demanda }),
     ...(plaza     !== 'all' && { plaza }),
     ...(profesion !== 'all' && { profesion }),
     ...(tipo      !== 'all' && { tipo }),
-    ...(orderBy   !== 'createdAt' && { orderBy }),
-    ...(orderDir  !== 'desc'     && { orderDir }),
+    orderBy,
+    orderDir,
   }).toString()
   const exportQs = exportBase ? `?${exportBase}` : ''
 

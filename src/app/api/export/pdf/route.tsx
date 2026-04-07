@@ -286,12 +286,12 @@ export async function GET(req: NextRequest) {
     const tipo    = sp.get('tipo')    ?? 'all'
 
     // Sort params — validated to prevent injection
-    // Default: fullName asc — la export es un snapshot oficial, A→Z es lo esperado
+    // Default: createdAt desc — matchea el default de /personas page (más reciente primero)
     const VALID_SORT = ['fullName', 'dni', 'createdAt'] as const
-    const rawOrderBy  = sp.get('orderBy') ?? 'fullName'
-    const rawOrderDir = sp.get('orderDir') ?? 'asc'
+    const rawOrderBy  = sp.get('orderBy') ?? 'createdAt'
+    const rawOrderDir = sp.get('orderDir') ?? 'desc'
     const sortField = VALID_SORT.includes(rawOrderBy as typeof VALID_SORT[number])
-      ? rawOrderBy : 'fullName'
+      ? rawOrderBy : 'createdAt'
     const sortDir = rawOrderDir === 'asc' ? 'asc' : 'desc'
 
     const where = {
