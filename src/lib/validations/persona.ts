@@ -23,11 +23,11 @@ const DNI_ERROR = 'El DNI debe tener el formato 0801-1995-033990'
 
 // ─── Schema del familiar designado ────────────────────────────────────────
 export const relatedPersonSchema = z.object({
-  fullName:     z.string().min(2, 'Ingrese el nombre completo'),
-  dni:          z.string().regex(DNI_REGEX, DNI_ERROR),
-  phone:        z.string().min(8, 'Ingrese un teléfono válido'),
-  email:        z.union([z.string().email('Email inválido'), z.literal('')]).optional(),
-  relationship: z.string().min(2, 'Indique el parentesco'),
+  fullName:     z.string().trim().min(2, 'Ingrese el nombre completo'),
+  dni:          z.string().trim().regex(DNI_REGEX, DNI_ERROR),
+  phone:        z.string().trim().min(8, 'Ingrese un teléfono válido'),
+  email:        z.union([z.string().trim().email('Email inválido'), z.literal('')]).optional(),
+  relationship: z.string().trim().min(2, 'Indique el parentesco'),
 })
 
 export type RelatedPersonValues = z.infer<typeof relatedPersonSchema>
@@ -40,15 +40,15 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
   // ── Campos base ────────────────────────────────────────────────────────
   const baseShape = {
     fullName: req('fullName')
-      ? z.string().min(2, 'Ingrese el nombre completo')
-      : z.string(),
+      ? z.string().trim().min(2, 'Ingrese el nombre completo')
+      : z.string().trim(),
     dni: req('dni')
-      ? z.string().regex(DNI_REGEX, DNI_ERROR)
-      : z.string(),
+      ? z.string().trim().regex(DNI_REGEX, DNI_ERROR)
+      : z.string().trim(),
     phone: req('phone')
-      ? z.string().min(8, 'Ingrese un teléfono válido')
-      : z.string(),
-    email: z.union([z.string().email('Email inválido'), z.literal('')]).optional(),
+      ? z.string().trim().min(8, 'Ingrese un teléfono válido')
+      : z.string().trim(),
+    email: z.union([z.string().trim().email('Email inválido'), z.literal('')]).optional(),
     age: req('age')
       ? z.number().int().min(16, 'Edad mínima 16').max(99, 'Edad máxima 99')
       : z.number().int().min(0).max(120).optional(),
@@ -91,11 +91,11 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
   return z.object(baseShape)
     .extend({
       relatedPerson: z.object({
-        fullName:     z.string().optional(),
-        dni:          z.string().optional(),
-        phone:        z.string().optional(),
-        email:        z.union([z.string().email('Email inválido'), z.literal('')]).optional(),
-        relationship: z.string().optional(),
+        fullName:     z.string().trim().optional(),
+        dni:          z.string().trim().optional(),
+        phone:        z.string().trim().optional(),
+        email:        z.union([z.string().trim().email('Email inválido'), z.literal('')]).optional(),
+        relationship: z.string().trim().optional(),
       }).optional(),
       dynamicFields: z.record(z.string(), z.coerce.string()).optional(),
     })
@@ -116,10 +116,10 @@ export function buildPersonaSchema(fieldConfigs: FormFieldConfig[]) {
 
 // Tipo base — compatible con ambas variantes del schema
 export const personaBaseSchema = z.object({
-  fullName:       z.string(),
-  dni:            z.string(),
-  phone:          z.string(),
-  email:          z.union([z.string().email(), z.literal('')]).optional(),
+  fullName:       z.string().trim(),
+  dni:            z.string().trim(),
+  phone:          z.string().trim(),
+  email:          z.union([z.string().trim().email(), z.literal('')]).optional(),
   age:            z.number().int().min(0).max(120).optional(),
   profession:     z.array(z.string()).optional(),
   tipo:           z.enum(['JRV', 'MESA_APOYO', 'OBSERVADORES', 'ROBLES', 'AMOR_VIVIENTE']).default('JRV'),
@@ -136,11 +136,11 @@ export const personaBaseSchema = z.object({
 export const personaFormSchema = personaBaseSchema
   .extend({
     relatedPerson: z.object({
-      fullName:     z.string().optional(),
-      dni:          z.string().optional(),
-      phone:        z.string().optional(),
-      email:        z.union([z.string().email('Email inválido'), z.literal('')]).optional(),
-      relationship: z.string().optional(),
+      fullName:     z.string().trim().optional(),
+      dni:          z.string().trim().optional(),
+      phone:        z.string().trim().optional(),
+      email:        z.union([z.string().trim().email('Email inválido'), z.literal('')]).optional(),
+      relationship: z.string().trim().optional(),
     }).optional(),
     dynamicFields: z.record(z.string(), z.coerce.string()).optional(),
   })
